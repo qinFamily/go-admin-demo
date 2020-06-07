@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"go-admin-demo/models"
@@ -22,6 +23,7 @@ func GetMenuList(c *gin.Context) {
 	Menu.Visible = c.Request.FormValue("visible")
 	Menu.Title = c.Request.FormValue("title")
 	Menu.DataScope = tools.GetUserIdStr(c)
+	fmt.Println("GetMenuList=========Menu", Menu)
 	result, err := Menu.SetMenu()
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 

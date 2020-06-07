@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	orm "go-admin-demo/database"
 	"go-admin-demo/tools"
 )
@@ -92,6 +94,7 @@ func (e *Menu) GetByMenuId() (Menu Menu, err error) {
 func (e *Menu) SetMenu() (m []Menu, err error) {
 	menulist, err := e.GetPage()
 
+	// fmt.Println("SetMenu=========menulist", menulist)
 	m = make([]Menu, 0)
 	for i := 0; i < len(menulist); i++ {
 		if menulist[i].ParentId != 0 {
@@ -101,6 +104,7 @@ func (e *Menu) SetMenu() (m []Menu, err error) {
 
 		m = append(m, menusInfo)
 	}
+	// fmt.Println("SetMenu=========m", m)
 	return
 }
 
@@ -187,8 +191,10 @@ func DiguiMenuLable(menulist *[]Menu, menu MenuLable) MenuLable {
 }
 
 func (e *Menu) SetMenuRole(rolename string) (m []Menu, err error) {
-
+	// fmt.Println("SetMenuRole=========rolename", rolename)
 	menulist, err := e.GetByRoleName(rolename)
+
+	// fmt.Println("SetMenuRole=========menulist", menulist)
 
 	m = make([]Menu, 0)
 	for i := 0; i < len(menulist); i++ {
@@ -199,6 +205,7 @@ func (e *Menu) SetMenuRole(rolename string) (m []Menu, err error) {
 
 		m = append(m, menusInfo)
 	}
+	fmt.Println("SetMenuRole=========m", m)
 	return
 }
 
@@ -275,6 +282,25 @@ func (e *Menu) Create() (id int, err error) {
 		err = result.Error
 		return
 	}
+	fmt.Println(fmt.Sprintf("Create=========%+v", e ))
+	cb, er := strconv.Atoi(e.CreateBy)
+	if er != nil {
+		err = er
+		return
+	}
+	// 更新 sys_role_menu
+	roleMenu := &RoleMenu{
+		RoleId: cb,
+		MenuId: e.MenuId,
+	}
+	b, er := roleMenu.Insert(roleMenu.RoleId, []int{roleMenu.MenuId})
+	if er != nil {
+		err = er
+		return
+	}
+	if !b {
+		return
+	} 
 	err = InitPaths(e)
 	if err != nil {
 		return
