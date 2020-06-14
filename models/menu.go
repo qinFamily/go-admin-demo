@@ -205,7 +205,7 @@ func (e *Menu) SetMenuRole(rolename string) (m []Menu, err error) {
 
 		m = append(m, menusInfo)
 	}
-	fmt.Println("SetMenuRole=========m", m)
+	// fmt.Println("SetMenuRole=========m", m)
 	return
 }
 

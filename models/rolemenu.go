@@ -111,25 +111,30 @@ func (rm *RoleMenu) Insert(roleId int, menuId []int) (bool, error) {
 	//ORM不支持批量插入所以需要拼接 sql 串
 	sql := "INSERT INTO `sys_role_menu` (`role_id`,`menu_id`,`role_name`) VALUES "
 
+	hasTypeA := false
 	sql2 := "INSERT INTO casbin_rule  (`p_type`,`v0`,`v1`,`v2`) VALUES "
 	for i := 0; i < len(menu); i++ {
 		if len(menu)-1 == i {
 			//最后一条数据 以分号结尾
 			sql += fmt.Sprintf("(%d,%d,'%s');", role.RoleId, menu[i].MenuId, role.RoleKey)
 			if menu[i].MenuType == "A" {
+				hasTypeA = true
 				sql2 += fmt.Sprintf("('p','%s','%s','%s');", role.RoleKey, menu[i].Path, menu[i].Action)
 			}
 		} else {
 			sql += fmt.Sprintf("(%d,%d,'%s'),", role.RoleId, menu[i].MenuId, role.RoleKey)
 			if menu[i].MenuType == "A" {
+				hasTypeA = true
 				sql2 += fmt.Sprintf("('p','%s','%s','%s'),", role.RoleKey, menu[i].Path, menu[i].Action)
 			}
 		}
 	}
+	
 	orm.Eloquent.Exec(sql)
-	sql2 = sql2[0:len(sql2)-1] + ";"
-	orm.Eloquent.Exec(sql2)
-
+	if hasTypeA {
+		sql2 = sql2[0:len(sql2)-1] + ";"
+		orm.Eloquent.Exec(sql2)
+	}
 	return true, nil
 }
 
