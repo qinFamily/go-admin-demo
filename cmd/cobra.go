@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"errors"
-	"github.com/spf13/cobra"
 	"go-admin-demo/cmd/api"
 	"go-admin-demo/cmd/migrate"
 	"log"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

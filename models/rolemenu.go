@@ -7,8 +7,8 @@ import (
 )
 
 type RoleMenu struct {
-	RoleId   int  `gorm:"type:int(11)"`
-	MenuId   int  `gorm:"type:int(11)"`
+	RoleId   int    `gorm:"type:int(11)"`
+	MenuId   int    `gorm:"type:int(11)"`
 	RoleName string `gorm:"type:varchar(128)"`
 	CreateBy string `gorm:"type:varchar(128)"`
 	UpdateBy string `gorm:"type:varchar(128)"`
@@ -109,10 +109,10 @@ func (rm *RoleMenu) Insert(roleId int, menuId []int) (bool, error) {
 		return false, err
 	}
 	//ORM不支持批量插入所以需要拼接 sql 串
-	sql := "INSERT INTO `sys_role_menu` (`role_id`,`menu_id`,`role_name`) VALUES "
+	sql := "INSERT IGNORE INTO `sys_role_menu` (`role_id`,`menu_id`,`role_name`) VALUES "
 
 	hasTypeA := false
-	sql2 := "INSERT INTO casbin_rule  (`p_type`,`v0`,`v1`,`v2`) VALUES "
+	sql2 := "INSERT IGNORE INTO casbin_rule  (`p_type`,`v0`,`v1`,`v2`) VALUES "
 	for i := 0; i < len(menu); i++ {
 		if len(menu)-1 == i {
 			//最后一条数据 以分号结尾
@@ -129,7 +129,7 @@ func (rm *RoleMenu) Insert(roleId int, menuId []int) (bool, error) {
 			}
 		}
 	}
-	
+
 	orm.Eloquent.Exec(sql)
 	if hasTypeA {
 		sql2 = sql2[0:len(sql2)-1] + ";"

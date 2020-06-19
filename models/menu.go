@@ -3,9 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	orm "go-admin-demo/database"
 	"go-admin-demo/tools"
+	"log"
+	"strconv"
 )
 
 type Menu struct {
@@ -282,7 +283,7 @@ func (e *Menu) Create() (id int, err error) {
 		err = result.Error
 		return
 	}
-	fmt.Println(fmt.Sprintf("Create=========%+v", e ))
+	// fmt.Println(fmt.Sprintf("Create=========%+v", e ))
 	cb, er := strconv.Atoi(e.CreateBy)
 	if er != nil {
 		err = er
@@ -300,7 +301,7 @@ func (e *Menu) Create() (id int, err error) {
 	}
 	if !b {
 		return
-	} 
+	}
 	err = InitPaths(e)
 	if err != nil {
 		return
@@ -335,6 +336,29 @@ func (e *Menu) Update(id int) (update Menu, err error) {
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+
+	// 如果是接口，修改roleMenu的CashBin
+	if e.MenuType == "A" {
+		var role SysRole
+		if err = orm.Eloquent.Table("sys_role").Where("role_id = ?", update.CreateBy).First(&role).Error; err != nil {
+			log.Println("Update menu sys_role return error ", update.CreateBy, fmt.Sprintf("update: %+v, e: %+v", update, e), err)
+			return
+		}
+		// cashbinRule := CasbinRule{}
+
+		sql2 := fmt.Sprintf("INSERT IGNORE INTO casbin_rule  (`p_type`,`v0`,`v1`,`v2`) VALUES ('p','%s','%s','%s');", role.RoleKey, e.Path, e.Action)
+		orm.Eloquent.Exec(sql2)
+
+		// newCashbinRule := cashbinRule
+		// // 修改Role
+		// newCashbinRule.V0 = role.RoleKey
+		// // 修改接口的方法
+		// newCashbinRule.V2 = e.Action
+		// if err = orm.Eloquent.Table("casbin_rule").Model(&cashbinRule).Updates(&newCashbinRule).Error; err != nil {
+		// 	return
+		// }
+	}
+
 	err = InitPaths(e)
 	if err != nil {
 		return

@@ -3,10 +3,8 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"go-admin-demo/database"
+	"go-admin-demo/models"
 	"go-admin-demo/router"
 	"go-admin-demo/tools"
 	config2 "go-admin-demo/tools/config"
@@ -16,12 +14,16 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
-	config string
-	port   string
-	mode   string
+	config   string
+	port     string
+	mode     string
 	StartCmd = &cobra.Command{
 		Use:     "server",
 		Short:   "Start API server",
@@ -70,7 +72,7 @@ func run() error {
 		Addr:    config2.ApplicationConfig.Host + ":" + config2.ApplicationConfig.Port,
 		Handler: r,
 	}
-
+	models.OpenRelated()
 	go func() {
 		// 服务连接
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -79,8 +81,8 @@ func run() error {
 	}()
 	content, _ := ioutil.ReadFile("./static/go-admin.txt")
 	log.Println(string(content))
-	log.Println("Server Run http://127.0.0.1:"+config2.ApplicationConfig.Port+"/")
-	log.Println("Swagger URL http://127.0.0.1:"+config2.ApplicationConfig.Port+"/swagger/index.html")
+	log.Println("Server Run http://127.0.0.1:" + config2.ApplicationConfig.Port + "/")
+	log.Println("Swagger URL http://127.0.0.1:" + config2.ApplicationConfig.Port + "/swagger/index.html")
 
 	log.Println("Enter Control + C Shutdown Server")
 	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）

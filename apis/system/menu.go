@@ -175,3 +175,8 @@ func GetMenuIDS(c *gin.Context) {
 	tools.HasError(err, "获取失败", 500)
 	app.OK(c, result, "")
 }
+
+
+func GetMenubButons(c *gin.Context) {
+	app.ResultOK(c, []string{"add", "del", "update", "view"}, "")
+}

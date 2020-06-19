@@ -1,21 +1,23 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/swaggo/gin-swagger"
-	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"go-admin-demo/apis"
 	log2 "go-admin-demo/apis/log"
 	"go-admin-demo/apis/monitor"
 	"go-admin-demo/apis/system"
 	"go-admin-demo/apis/system/dict"
 	. "go-admin-demo/apis/tools"
+	"go-admin-demo/apis/workflow"
 	_ "go-admin-demo/docs"
 	"go-admin-demo/handler"
 	"go-admin-demo/handler/sd"
 	"go-admin-demo/middleware"
 	_ "go-admin-demo/pkg/jwtauth"
 	"log"
+
+	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 func InitRouter() *gin.Engine {
@@ -155,12 +157,15 @@ func InitRouter() *gin.Engine {
 
 		auth.POST("/logout", handler.LogOut)
 
+		auth.GET("/articleList", apis.GetArticleList)
+		auth.GET("/article/:articleId", apis.GetArticle)
+		auth.POST("/article", apis.InsertArticle)
+		auth.PUT("/article", apis.UpdateArticle)
+		auth.DELETE("/article/:articleId", apis.DeleteArticle)
 
-		auth.GET("/articleList",apis.GetArticleList)
-		auth.GET("/article/:articleId",apis.GetArticle)
-		auth.POST("/article",apis.InsertArticle)
-		auth.PUT("/article",apis.UpdateArticle)
-		auth.DELETE("/article/:articleId",apis.DeleteArticle)
+		auth.GET("/sys/auth/getmenubutons", system.GetMenubButons)
+		auth.GET("/workflow/workflowtype", workflow.GetWorkFlowType)
+		auth.GET("/workflow/workflow", workflow.GetWorkFlow)
 	}
 	//r.NoRoute(authMiddleware.MiddlewareFunc(), NoFound)
 
