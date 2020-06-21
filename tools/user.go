@@ -2,8 +2,9 @@ package tools
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	jwt "go-admin-demo/pkg/jwtauth"
+
+	"github.com/gin-gonic/gin"
 )
 
 func ExtractClaims(c *gin.Context) jwt.MapClaims {
@@ -35,6 +36,7 @@ func GetUserIdStr(c *gin.Context) string {
 
 func GetUserName(c *gin.Context) string {
 	data := ExtractClaims(c)
+	fmt.Println("****************************** GetUserName-->data", data)
 	if data["nice"] != nil {
 		return (data["nice"]).(string)
 	}

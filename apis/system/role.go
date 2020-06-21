@@ -1,11 +1,12 @@
 package system
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"go-admin-demo/models"
 	"go-admin-demo/tools"
 	"go-admin-demo/tools/app"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 // @Summary 角色列表数据
@@ -61,6 +62,13 @@ func GetRole(c *gin.Context) {
 	result.MenuIds = menuIds
 	app.OK(c, result, "")
 
+}
+
+func GetRoleInit(c *gin.Context) {
+	var SysRole models.SysRole
+	roles, err := SysRole.GetList()
+	tools.HasError(err, "抱歉未找到相关信息", -1)
+	app.ResultOK(c, roles, "")
 }
 
 // @Summary 创建角色

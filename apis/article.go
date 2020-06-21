@@ -1,12 +1,13 @@
 package apis
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"go-admin-demo/models"
 	"go-admin-demo/tools"
 	"go-admin-demo/tools/app"
 	"go-admin-demo/tools/app/msg"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func GetArticleList(c *gin.Context) {
@@ -25,7 +26,6 @@ func GetArticleList(c *gin.Context) {
 	data.Title = c.Request.FormValue("title")
 	data.Author = c.Request.FormValue("author")
 
-
 	data.DataScope = tools.GetUserIdStr(c)
 	result, count, err := data.GetPage(pageSize, pageIndex)
 	tools.HasError(err, "", -1)
@@ -35,7 +35,8 @@ func GetArticleList(c *gin.Context) {
 
 func GetArticle(c *gin.Context) {
 	var data models.Article
-	data.ArticleId, _ = tools.StringToInt(c.Param("articleId"))
+	// data.ArticleId, _ = tools.StringToInt(c.Param("articleId"))
+	data.ArticleId = c.Param("articleId")
 	result, err := data.Get()
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
@@ -54,13 +55,24 @@ func InsertArticle(c *gin.Context) {
 
 func UpdateArticle(c *gin.Context) {
 	var data models.Article
-	err := c.BindWith(&data, binding.JSON)
+	err := c.ShouldBindWith(&data, binding.JSON)
 	tools.HasError(err, "数据解析失败", -1)
+	// d, e := c.GetRawData()
+	// log.Println("************* 数据", err, e, string(d))
 	//data.UpdateBy = tools.GetUserIdStr(c)
-	result, err := data.Update(data.ArticleId)
-	tools.HasError(err, "", -1)
+	// result, err := data.Update(data.ArticleId)
+	if len(data.ArticleId) > 0 {
+		articleId, err := tools.StringToInt(data.ArticleId)
 
-	app.OK(c, result, "")
+		tools.HasError(err, "数据解析失败", -2)
+
+		result, err := data.Update(articleId)
+		tools.HasError(err, "", -1)
+
+		app.OK(c, result, "")
+		return
+	}
+	InsertArticle(c)
 }
 
 func DeleteArticle(c *gin.Context) {

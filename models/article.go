@@ -6,7 +6,7 @@ import (
 )
 
 type Article struct {
-	ArticleId int    `json:"articleId" gorm:"type:int(11);primary_key"` // 编码
+	ArticleId string `json:"articleId" gorm:"type:int(11);primary_key"` // 编码
 	Title     string `json:"title" gorm:"type:varchar(128);"`           // 标题
 	Author    string `json:"author" gorm:"type:varchar(128);"`          // 作者
 	Content   string `json:"content" gorm:"type:varchar(255);"`         // 内容

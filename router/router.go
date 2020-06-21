@@ -164,8 +164,22 @@ func InitRouter() *gin.Engine {
 		auth.DELETE("/article/:articleId", apis.DeleteArticle)
 
 		auth.GET("/sys/auth/getmenubutons", system.GetMenubButons)
-		auth.GET("/workflow/workflowtype", workflow.GetWorkFlowType)
-		auth.GET("/workflow/workflow", workflow.GetWorkFlow)
+		auth.GET("/workflow/workflowtype/", workflow.GetWorkFlowType)
+		auth.PUT("/workflow/workflowtype/:flowtypeId/", workflow.UpdateWorkFlowType)
+		auth.GET("/workflow/workflow/", workflow.GetWorkFlow)
+		auth.PUT("/workflow/workflow/:flowId/", workflow.UpdateWorkFlow)
+		auth.DELETE("/workflow/workflow/:flowId/", workflow.DeleteWorkflowsWorkflow)
+		auth.DELETE("/workflow/workflowtype/:flowtypeId/", workflow.DeleteWorkflowsWorkflow)
+
+		auth.GET("/workflow/customfield/", workflow.GetWorkFlowCustomField)
+		auth.GET("/workflow/state/", workflow.GetWorkFlowState)
+		auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
+		auth.PUT("/workflow/wfconf/:confId", workflow.UpdateWorkFlow)
+		// auth.PUT("", workflow.UpdateWorkFlow)
+		auth.GET("/sys/user/", system.GetSysUserWorkflow)
+		auth.GET("/role/", system.GetRoleInit)
+		auth.GET("/dept/", system.GetDeptInit)
+
 	}
 	//r.NoRoute(authMiddleware.MiddlewareFunc(), NoFound)
 

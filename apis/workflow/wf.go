@@ -1,10 +1,10 @@
 package workflow
 
 import (
-	orm "go-admin-demo/database"
 	"go-admin-demo/models"
 	"go-admin-demo/tools"
 	"go-admin-demo/tools/app"
+	"go-admin-demo/tools/app/msg"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,44 +12,52 @@ import (
 
 /*/workflow/workflowtype/?page=1&limit=20*/
 func GetWorkFlow(c *gin.Context) {
-	// var data models.Menu
-	// var err error
-	// var pageSize = 10
-	// var pageIndex = 1
 
-	// if size := c.Request.FormValue("limit"); size != "" {
-	// 	pageSize = tools.StrToInt(err, size)
-	// }
+	var data models.WorkflowsWorkflow
+	var err error
+	var pageSize = 20
+	var pageIndex = 1
 
-	// if index := c.Request.FormValue("page"); index != "" {
-	// 	pageIndex = tools.StrToInt(err, index)
-	// }
+	if size := c.Request.FormValue("limit"); size != "" {
+		pageSize = tools.StrToInt(err, size)
+	}
+	if index := c.Request.FormValue("page"); index != "" {
+		pageIndex = tools.StrToInt(err, index)
+	}
 
-	// data.ConfigKey = c.Request.FormValue("configKey")
-	// data.ConfigName = c.Request.FormValue("configName")
-	// data.ConfigType = c.Request.FormValue("configType")
-	// data.DataScope = tools.GetUserIdStr(c)
-	// result, count, err := data.GetPage(pageSize, pageIndex)
-	// tools.HasError(err, "", -1)
-
-	// var mp = make(map[string]interface{}, 3)
-	// mp["list"] = result
-	// mp["count"] = count
-	// mp["pageIndex"] = pageIndex
-	// mp["pageSize"] = pageSize
-
-	wfwfmgr := models.WorkflowsWorkflowMgr(orm.Eloquent)
-	results, err := wfwfmgr.Gets()
+	data.DataScope = tools.GetUserIdStr(c)
+	result, count, err := data.GetPage(pageSize, pageIndex, true)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	res := app.WorkFlowResponse{
-		Code:     20000,
-		Next:     nil,
-		Previous: nil,
-		Results:  results,
-		Count:    len(results),
+		Code:    200,
+		Results: result,
+		Count:   count,
 	}
 	c.JSON(http.StatusOK, res.ReturnOK())
+}
+
+func UpdateWorkFlow(c *gin.Context) {
+	var data models.WorkflowsWorkflow
+	err := c.ShouldBindJSON(&data)
+	tools.HasError(err, "数据WorkFlow解析错误", 500)
+
+	IDS := tools.IdsStrToIdsIntGroup("flowId", c)
+	if len(IDS) > 0 {
+		_, err = data.Update(IDS[0])
+		tools.HasError(err, "抱歉未找到相关信息", -1)
+		app.OK(c, nil, msg.UpdatedSuccess)
+		return
+	}
+	app.OK(c, nil, msg.NotFound)
+}
+
+func DeleteWorkflowsWorkflow(c *gin.Context) {
+	var data models.WorkflowsWorkflow
+	IDS := tools.IdsStrToIdsIntGroup("flowId", c)
+	_, err := data.BatchDelete(IDS)
+	tools.HasError(err, msg.DeletedFail, 500)
+	app.OK(c, nil, msg.DeletedSuccess)
 }
 
 /*

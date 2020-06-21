@@ -223,42 +223,6 @@ type SysTables struct {
 	DeletedAt           time.Time `gorm:"index;column:deleted_at;type:timestamp" json:"deleted_at"`
 }
 
-// WorkflowsCustomfield [...]
-type WorkflowsCustomfield struct {
-	ID                  int               `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
-	CreateTime          time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime          time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	FieldAttribute      int8              `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
-	FieldType           string            `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
-	FieldKey            string            `gorm:"column:field_key;type:varchar(50);not null" json:"field_key"`
-	FieldName           string            `gorm:"column:field_name;type:varchar(50);not null" json:"field_name"`
-	OrderID             int               `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	DefaultValue        string            `gorm:"column:default_value;type:varchar(100)" json:"default_value"`
-	FieldTemplate       string            `gorm:"column:field_template;type:text;not null" json:"field_template"`
-	BooleanFieldDisplay string            `gorm:"column:boolean_field_display;type:varchar(100);not null" json:"boolean_field_display"`
-	FieldChoice         string            `gorm:"column:field_choice;type:varchar(255);not null" json:"field_choice"`
-	Label               string            `gorm:"column:label;type:varchar(100);not null" json:"label"`
-	WorkflowID          int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow   WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflows_workflow_list"`
-}
-
-// WorkflowsState [...]
-type WorkflowsState struct {
-	ID                int               `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
-	CreateTime        time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime        time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo              string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name              string            `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	IsHidden          int8              `gorm:"column:is_hidden;type:tinyint(4);not null" json:"is_hidden"`
-	OrderID           int               `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	StateType         string            `gorm:"column:state_type;type:varchar(1);not null" json:"state_type"`
-	EnableRetreat     int8              `gorm:"column:enable_retreat;type:tinyint(4);not null" json:"enable_retreat"`
-	ParticipantType   string            `gorm:"column:participant_type;type:varchar(1);not null" json:"participant_type"`
-	WorkflowID        int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflows_workflow_list"`
-}
-
 // WorkflowsStateFields [...]
 type WorkflowsStateFields struct {
 	ID                   int                  `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
@@ -293,75 +257,4 @@ type WorkflowsStateUserParticipant struct {
 	WorkflowsState WorkflowsState `gorm:"association_foreignkey:state_id;foreignkey:id" json:"workflows_state_list"`
 	UserID         int            `gorm:"unique_index:workflows_state_user_participant_state_id_user_id_uniq;index;column:user_id;type:int(11);not null" json:"user_id"`
 	SysUser        SysUser        `gorm:"association_foreignkey:user_id;foreignkey:user_id" json:"sys_user_list"`
-}
-
-// WorkflowsTransition [...]
-type WorkflowsTransition struct {
-	ID                  int               `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
-	CreateTime          time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime          time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name                string            `gorm:"column:name;type:varchar(1);not null" json:"name"`
-	TransitionType      string            `gorm:"column:transition_type;type:varchar(1);not null" json:"transition_type"`
-	Timer               int               `gorm:"column:timer;type:int(11);not null" json:"timer"`
-	ConditionExpression string            `gorm:"column:condition_expression;type:text;not null" json:"condition_expression"`
-	AttributeType       string            `gorm:"column:attribute_type;type:varchar(1);not null" json:"attribute_type"`
-	AlertEnable         int8              `gorm:"column:alert_enable;type:tinyint(4);not null" json:"alert_enable"`
-	AlertText           string            `gorm:"column:alert_text;type:varchar(100);not null" json:"alert_text"`
-	DestStateID         int               `gorm:"index;column:dest_state_id;type:int(11)" json:"dest_state_id"`
-	WorkflowsState      WorkflowsState    `gorm:"association_foreignkey:dest_state_id;foreignkey:id" json:"workflows_state_list"`
-	SourceStateID       int               `gorm:"index;column:source_state_id;type:int(11)" json:"source_state_id"`
-	WorkflowID          int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow   WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflows_workflow_list"`
-}
-
-// WorkflowsWorkflow [...]
-type WorkflowsWorkflow struct {
-	ID                    int                   `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
-	CreateTime            time.Time             `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime            time.Time             `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                  string                `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name                  string                `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	TicketSnPrefix        string                `gorm:"column:ticket_sn_prefix;type:varchar(20);not null" json:"ticket_sn_prefix"`
-	Status                bool                  `gorm:"column:status;type:tinyint(4);not null" json:"status"`
-	ViewPermissionCheck   bool                  `gorm:"column:view_permission_check;type:tinyint(4);not null" json:"view_permission_check"`
-	LimitExpression       string                `gorm:"column:limit_expression;type:text;not null" json:"limit_expression"`
-	DisplayFormStr        string                `gorm:"column:display_form_str;type:text;not null" json:"display_form_str"`
-	TitleTemplate         string                `gorm:"column:title_template;type:varchar(50)" json:"title_template"`
-	TypeID                int                   `gorm:"index;column:type_id;type:int(11);not null" json:"-"`
-	WorkflowsWorkflowtype WorkflowsWorkflowtype `gorm:"association_foreignkey:type_id;foreignkey:id" json:"type"`
-}
-
-// WorkflowsWorkflowtype [...]
-type WorkflowsWorkflowtype struct {
-	ID         int       `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
-	CreateTime time.Time `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime time.Time `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo       string    `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name       string    `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	Code       string    `gorm:"unique;column:code;type:varchar(32);not null" json:"code"`
-	OrderID    int       `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-}
-
-// WorkflowsWorkflowWioutType [...]
-type WorkflowsWorkflowWioutType struct {
-	ID                  int       `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
-	CreateTime          time.Time `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime          time.Time `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                string    `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name                string    `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	TicketSnPrefix      string    `gorm:"column:ticket_sn_prefix;type:varchar(20);not null" json:"ticket_sn_prefix"`
-	Status              bool      `gorm:"column:status;type:tinyint(4);not null" json:"status"`
-	ViewPermissionCheck bool      `gorm:"column:view_permission_check;type:tinyint(4);not null" json:"view_permission_check"`
-	LimitExpression     string    `gorm:"column:limit_expression;type:text;not null" json:"limit_expression"`
-	DisplayFormStr      string    `gorm:"column:display_form_str;type:text;not null" json:"display_form_str"`
-	TitleTemplate       string    `gorm:"column:title_template;type:varchar(50)" json:"title_template"`
-	TypeID              int       `gorm:"index;column:type_id;type:int(11);not null" json:"-"`
-	Workflowtype        int       `gorm:"-" json:"type"`
-}
-
-// WorkflowtypeWorkflowsSet [...]
-type WorkflowtypeWorkflowsSet struct {
-	*WorkflowsWorkflowtype
-	WorkflowSet []*WorkflowsWorkflowWioutType `gorm:"-" json:"workflow_set"`
 }

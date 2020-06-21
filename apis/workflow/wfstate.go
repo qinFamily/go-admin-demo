@@ -10,28 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type wftResponseResult struct {
-	models.WorkflowsWorkflowtype
-	WorkflowSet []struct {
-		CreateTime          string `json:"create_time"`
-		DisplayFormStr      string `json:"display_form_str"`
-		ID                  int64  `json:"id"`
-		LimitExpression     string `json:"limit_expression"`
-		Memo                string `json:"memo"`
-		Name                string `json:"name"`
-		Status              bool   `json:"status"`
-		TicketSnPrefix      string `json:"ticket_sn_prefix"`
-		TitleTemplate       string `json:"title_template"`
-		Type                int64  `json:"type"`
-		UpdateTime          string `json:"update_time"`
-		ViewPermissionCheck bool   `json:"view_permission_check"`
-	} `json:"workflow_set"`
-}
+/*/workflow/state/?page=1&limit=20*/
+func GetWorkFlowState(c *gin.Context) {
 
-/*/workflow/workflowtype/?page=1&limit=20*/
-func GetWorkFlowType(c *gin.Context) {
-
-	var data models.WorkflowsWorkflowtype
+	var data models.WorkflowsState
 	var err error
 	var pageSize = 20
 	var pageIndex = 1
@@ -44,7 +26,7 @@ func GetWorkFlowType(c *gin.Context) {
 	}
 
 	data.DataScope = tools.GetUserIdStr(c)
-	result, count, err := data.GetPage(pageSize, pageIndex)
+	result, count, err := data.GetPage(pageSize, pageIndex, true)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	res := &app.WorkFlowResponse{
@@ -54,8 +36,8 @@ func GetWorkFlowType(c *gin.Context) {
 	c.JSON(http.StatusOK, res.ReturnOK())
 }
 
-func UpdateWorkFlowType(c *gin.Context) {
-	var data models.WorkflowsWorkflowtype
+func UpdateWorkFlowState(c *gin.Context) {
+	var data models.WorkflowsState
 	err := c.ShouldBindJSON(&data)
 	tools.HasError(err, "数据WorkFlow解析错误", 500)
 
@@ -74,8 +56,8 @@ func UpdateWorkFlowType(c *gin.Context) {
 	// c.JSON(http.StatusOK, res.ReturnOK())
 }
 
-func DeleteWorkflowsWorkflowType(c *gin.Context) {
-	var data models.WorkflowsWorkflowtype
+func DeleteWorkflowsWorkFlowState(c *gin.Context) {
+	var data models.WorkflowsState
 	IDS := tools.IdsStrToIdsIntGroup("flowtypeId", c)
 	_, err := data.BatchDelete(IDS)
 	tools.HasError(err, msg.DeletedFail, 500)
