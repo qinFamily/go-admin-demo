@@ -25,8 +25,14 @@ func GetWorkFlowState(c *gin.Context) {
 		pageIndex = tools.StrToInt(err, index)
 	}
 
+	var workflowID = 0
+	if id := c.Request.FormValue("workflow"); id != "" {
+		workflowID = tools.StrToInt(err, id)
+	}
+	data.WorkflowID = workflowID
+
 	data.DataScope = tools.GetUserIdStr(c)
-	result, count, err := data.GetPage(pageSize, pageIndex, true)
+	result, count, err := data.GetPage(pageSize, pageIndex, false)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	res := &app.WorkFlowResponse{

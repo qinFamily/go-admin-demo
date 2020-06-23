@@ -7,30 +7,30 @@ import (
 
 // WorkflowsCustomfield [...]
 type WorkflowsCustomfield struct {
-	ID                  int               `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
-	CreateTime          time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime          time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	FieldAttribute      int8              `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
-	FieldType           string            `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
-	FieldKey            string            `gorm:"column:field_key;type:varchar(50);not null" json:"field_key"`
-	FieldName           string            `gorm:"column:field_name;type:varchar(50);not null" json:"field_name"`
-	OrderID             int               `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	DefaultValue        string            `gorm:"column:default_value;type:varchar(100)" json:"default_value"`
-	FieldTemplate       string            `gorm:"column:field_template;type:text;not null" json:"field_template"`
-	BooleanFieldDisplay string            `gorm:"column:boolean_field_display;type:varchar(100);not null" json:"boolean_field_display"`
-	FieldChoice         string            `gorm:"column:field_choice;type:varchar(255);not null" json:"field_choice"`
-	Label               string            `gorm:"column:label;type:varchar(100);not null" json:"label"`
-	WorkflowID          int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow   WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow_set"`
-	DataScope           string            `json:"dataScope" gorm:"-"`
-	Params              string            `json:"params"  gorm:"-"`
+	ID                  int       `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
+	CreateTime          time.Time `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
+	UpdateTime          time.Time `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
+	Memo                string    `gorm:"column:memo;type:text;not null" json:"memo"`
+	FieldAttribute      int8      `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
+	FieldType           string    `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
+	FieldKey            string    `gorm:"column:field_key;type:varchar(50);not null" json:"field_key"`
+	FieldName           string    `gorm:"column:field_name;type:varchar(50);not null" json:"field_name"`
+	OrderID             int       `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
+	DefaultValue        string    `gorm:"column:default_value;type:varchar(100)" json:"default_value"`
+	FieldTemplate       string    `gorm:"column:field_template;type:text;not null" json:"field_template"`
+	BooleanFieldDisplay string    `gorm:"column:boolean_field_display;type:varchar(100);not null" json:"boolean_field_display"`
+	FieldChoice         string    `gorm:"column:field_choice;type:varchar(255);not null" json:"field_choice"`
+	Label               string    `gorm:"column:label;type:varchar(100);not null" json:"label"`
+	WorkflowID          int       `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow"`
+	// WorkflowsWorkflow   WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow_set"`
+	DataScope string `json:"dataScope" gorm:"-"`
+	Params    string `json:"params"  gorm:"-"`
 	BaseModel
 }
 
 // GetTableName get sql table name.获取数据库名字
 func (WorkflowsCustomfield) TableName() string {
-	return "workflows_state"
+	return "workflows_customfield"
 }
 
 func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
@@ -56,14 +56,14 @@ func (w *WorkflowsCustomfield) Get(isRelated bool) (WorkflowsCustomfield, error)
 	if err := table.First(&wft).Error; err != nil {
 		return wft, err
 	}
-	if isRelated {
-		info := &WorkflowsWorkflow{
-			ID: wft.WorkflowID,
-		}
-		if wt, err := info.Get(false); err == nil {
-			wft.WorkflowsWorkflow = wt
-		}
-	}
+	// if isRelated {
+	// 	info := &WorkflowsWorkflow{
+	// 		ID: wft.WorkflowID,
+	// 	}
+	// 	if wt, err := info.Get(false); err == nil {
+	// 		wft.WorkflowsWorkflow = wt
+	// 	}
+	// }
 
 	return wft, nil
 }
@@ -84,16 +84,16 @@ func (w *WorkflowsCustomfield) GetPage(pageSize int, pageIndex int, isRelated bo
 	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
 		return nil, 0, err
 	}
-	if isRelated {
-		for i, r := range results {
-			info := &WorkflowsWorkflow{
-				ID: r.WorkflowID,
-			}
-			if wt, err := info.Get(false); err == nil {
-				results[i].WorkflowsWorkflow = wt
-			}
-		}
-	}
+	// if isRelated {
+	// 	for i, r := range results {
+	// 		info := &WorkflowsWorkflow{
+	// 			ID: r.WorkflowID,
+	// 		}
+	// 		if wt, err := info.Get(false); err == nil {
+	// 			results[i].WorkflowsWorkflow = wt
+	// 		}
+	// 	}
+	// }
 	table.Count(&count)
 	return
 

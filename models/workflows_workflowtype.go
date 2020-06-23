@@ -13,8 +13,8 @@ type WorkflowsWorkflowtype struct {
 	Name      string `gorm:"column:name;type:varchar(50);not null" json:"name"`
 	Code      string `gorm:"unique;column:code;type:varchar(32);not null" json:"code"`
 	OrderID   int    `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	DataScope string `json:"dataScope" gorm:"-"`
-	Params    string `json:"params"  gorm:"-"`
+	DataScope string `json:"-" gorm:"-"`
+	Params    string `json:"-"  gorm:"-"`
 	BaseModel
 }
 

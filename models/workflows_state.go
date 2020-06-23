@@ -7,20 +7,24 @@ import (
 
 // WorkflowsState [...]
 type WorkflowsState struct {
-	ID                int               `gorm:"primary_key;column:id;type:int(11);not null" json:"-"`
-	CreateTime        time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime        time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo              string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name              string            `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	IsHidden          int8              `gorm:"column:is_hidden;type:tinyint(4);not null" json:"is_hidden"`
-	OrderID           int               `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	StateType         string            `gorm:"column:state_type;type:varchar(1);not null" json:"state_type"`
-	EnableRetreat     int8              `gorm:"column:enable_retreat;type:tinyint(4);not null" json:"enable_retreat"`
-	ParticipantType   string            `gorm:"column:participant_type;type:varchar(1);not null" json:"participant_type"`
-	WorkflowID        int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow_set"`
-	DataScope         string            `json:"dataScope" gorm:"-"`
-	Params            string            `json:"params"  gorm:"-"`
+	ID                int         `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
+	CreateTime        time.Time   `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
+	UpdateTime        time.Time   `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
+	Memo              string      `gorm:"column:memo;type:text;not null" json:"memo"`
+	Name              string      `gorm:"column:name;type:varchar(50);not null" json:"name"`
+	IsHidden          int8        `gorm:"column:is_hidden;type:tinyint(4);not null" json:"is_hidden"`
+	OrderID           int         `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
+	StateType         string      `gorm:"column:state_type;type:varchar(1);not null" json:"state_type"`
+	EnableRetreat     int8        `gorm:"column:enable_retreat;type:tinyint(4);not null" json:"enable_retreat"`
+	ParticipantType   string      `gorm:"column:participant_type;type:varchar(1);not null" json:"participant_type"`
+	WorkflowID        int         `gorm:"index;column:workflow_id;type:int(11);not null" json:"-"`
+	WorkflowsWorkflow interface{} `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow"`
+	UserParticipant   interface{} `gorm:"-" json:"user_participant"`
+	GroupParticipant  interface{} `gorm:"-" json:"group_participant"`
+	RoleParticipant   interface{} `gorm:"-" json:"role_participant"`
+	Fields            interface{} `gorm:"-" json:"fields"`
+	DataScope         string      `json:"-" gorm:"-"`
+	Params            string      `json:"-"  gorm:"-"`
 	BaseModel
 }
 
@@ -43,25 +47,103 @@ func (w *WorkflowsState) Create() (WorkflowsState, error) {
 // Get 获取
 func (w *WorkflowsState) Get(isRelated bool) (WorkflowsState, error) {
 
-	var wft WorkflowsState
+	var wfs WorkflowsState
 
 	table := orm.Eloquent.Table(w.TableName())
 	if w.ID != 0 {
 		table = table.Where("id = ?", w.ID)
 	}
-	if err := table.First(&wft).Error; err != nil {
-		return wft, err
+	if err := table.First(&wfs).Error; err != nil {
+		return wfs, err
 	}
-	if isRelated {
-		info := &WorkflowsWorkflow{
-			ID: wft.WorkflowID,
+
+	wf := &WorkflowsWorkflow{
+		ID: wfs.WorkflowID,
+	}
+	if wt, err := wf.Get(isRelated); err == nil {
+		if isRelated {
+			wfs.WorkflowsWorkflow = wt
+		} else {
+			wfs.WorkflowsWorkflow = wt.ID
 		}
-		if wt, err := info.Get(false); err == nil {
-			wft.WorkflowsWorkflow = wt
+	}
+	up := &WorkflowsStateUserParticipant{
+		StateID: wfs.ID,
+	}
+	if wt, n, err := up.GetPage(1, 200, isRelated); err == nil {
+		if n > 0 {
+			if isRelated {
+				wfs.UserParticipant = wt
+			} else {
+				wtIDs := make([]int, 0)
+				for _, wti := range wt {
+					wtIDs = append(wtIDs, wti.ID)
+				}
+				wfs.UserParticipant = wtIDs
+			}
+		} else {
+			wfs.UserParticipant = []int{}
 		}
 	}
 
-	return wft, nil
+	gp := &WorkflowsStateGroupParticipant{
+		StateID: wfs.ID,
+	}
+	if wt, n, err := gp.GetPage(1, 200, isRelated); err == nil {
+		wtIDs := make([]int, 0)
+		if n > 0 {
+			if isRelated {
+				wfs.GroupParticipant = wt
+			} else {
+				for _, wti := range wt {
+					wtIDs = append(wtIDs, wti.ID)
+				}
+				wfs.GroupParticipant = wtIDs
+			}
+		} else {
+			wfs.GroupParticipant = wtIDs
+		}
+	}
+
+	rp := &WorkflowsStateRoleParticipant{
+		StateID: wfs.ID,
+	}
+	if wt, n, err := rp.GetPage(1, 200, isRelated); err == nil {
+		wtIDs := make([]int, 0)
+		if n > 0 {
+			if isRelated {
+				wfs.RoleParticipant = wt
+			} else {
+				for _, wti := range wt {
+					wtIDs = append(wtIDs, wti.ID)
+				}
+				wfs.RoleParticipant = wtIDs
+			}
+		} else {
+			wfs.RoleParticipant = wtIDs
+		}
+	}
+
+	f := &WorkflowsStateFields{
+		StateID: wfs.ID,
+	}
+	if wt, n, err := f.GetPage(1, 200, isRelated); err == nil {
+		wtIDs := make([]int, 0)
+		if n > 0 {
+			if isRelated {
+				wfs.Fields = wt
+			} else {
+				for _, wti := range wt {
+					wtIDs = append(wtIDs, wti.ID)
+				}
+				wfs.Fields = wtIDs
+			}
+		} else {
+			wfs.Fields = wtIDs
+		}
+	}
+
+	return wfs, nil
 }
 
 // Gets 获取批量结果
@@ -80,13 +162,90 @@ func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool) (r
 	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
 		return nil, 0, err
 	}
-	if isRelated {
-		for i, r := range results {
-			info := &WorkflowsWorkflow{
-				ID: r.WorkflowID,
-			}
-			if wt, err := info.Get(false); err == nil {
+	for i, r := range results {
+		info := &WorkflowsWorkflow{
+			ID: r.WorkflowID,
+		}
+		if wt, err := info.Get(isRelated); err == nil {
+			if isRelated {
 				results[i].WorkflowsWorkflow = wt
+			} else {
+				results[i].WorkflowsWorkflow = wt.ID
+			}
+		}
+		up := &WorkflowsStateUserParticipant{
+			StateID: r.ID,
+		}
+		if wt, n, err := up.GetPage(1, 200, isRelated); err == nil {
+			if n > 0 {
+				if isRelated {
+					results[i].UserParticipant = wt
+				} else {
+					wtIDs := make([]int, 0)
+					for _, wti := range wt {
+						wtIDs = append(wtIDs, wti.ID)
+					}
+					results[i].UserParticipant = wtIDs
+				}
+			} else {
+				results[i].UserParticipant = []int{}
+			}
+		}
+
+		gp := &WorkflowsStateGroupParticipant{
+			StateID: r.ID,
+		}
+		if wt, n, err := gp.GetPage(1, 200, isRelated); err == nil {
+			wtIDs := make([]int, 0)
+			if n > 0 {
+				if isRelated {
+					results[i].GroupParticipant = wt
+				} else {
+					for _, wti := range wt {
+						wtIDs = append(wtIDs, wti.ID)
+					}
+					results[i].GroupParticipant = wtIDs
+				}
+			} else {
+				results[i].GroupParticipant = wtIDs
+			}
+		}
+
+		rp := &WorkflowsStateRoleParticipant{
+			StateID: r.ID,
+		}
+		if wt, n, err := rp.GetPage(1, 200, isRelated); err == nil {
+			wtIDs := make([]int, 0)
+			if n > 0 {
+				if isRelated {
+					results[i].RoleParticipant = wt
+				} else {
+					for _, wti := range wt {
+						wtIDs = append(wtIDs, wti.ID)
+					}
+					results[i].RoleParticipant = wtIDs
+				}
+			} else {
+				results[i].RoleParticipant = wtIDs
+			}
+		}
+
+		f := &WorkflowsStateFields{
+			StateID: r.ID,
+		}
+		if wt, n, err := f.GetPage(1, 200, isRelated); err == nil {
+			wtIDs := make([]int, 0)
+			if n > 0 {
+				if isRelated {
+					results[i].Fields = wt
+				} else {
+					for _, wti := range wt {
+						wtIDs = append(wtIDs, wti.ID)
+					}
+					results[i].Fields = wtIDs
+				}
+			} else {
+				results[i].Fields = wtIDs
 			}
 		}
 	}

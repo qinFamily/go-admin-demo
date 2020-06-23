@@ -7,24 +7,25 @@ import (
 
 // WorkflowsTransition [...]
 type WorkflowsTransition struct {
-	ID                  int               `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
-	CreateTime          time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
-	UpdateTime          time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
-	Memo                string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name                string            `gorm:"column:name;type:varchar(1);not null" json:"name"`
-	TransitionType      string            `gorm:"column:transition_type;type:varchar(1);not null" json:"transition_type"`
-	Timer               int               `gorm:"column:timer;type:int(11);not null" json:"timer"`
-	ConditionExpression string            `gorm:"column:condition_expression;type:text;not null" json:"condition_expression"`
-	AttributeType       string            `gorm:"column:attribute_type;type:varchar(1);not null" json:"attribute_type"`
-	AlertEnable         int8              `gorm:"column:alert_enable;type:tinyint(4);not null" json:"alert_enable"`
-	AlertText           string            `gorm:"column:alert_text;type:varchar(100);not null" json:"alert_text"`
-	DestStateID         int               `gorm:"index;column:dest_state_id;type:int(11)" json:"dest_state_id"`
-	WorkflowsState      WorkflowsState    `gorm:"association_foreignkey:dest_state_id;foreignkey:id" json:"workflows_state_set"`
-	SourceStateID       int               `gorm:"index;column:source_state_id;type:int(11)" json:"source_state_id"`
-	WorkflowID          int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"workflow_id"`
-	WorkflowsWorkflow   WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow_set"`
-	DataScope           string            `json:"dataScope" gorm:"-"`
-	Params              string            `json:"params"  gorm:"-"`
+	ID                   int               `gorm:"primary_key;column:id;type:int(11);not null" json:"id"`
+	CreateTime           time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
+	UpdateTime           time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
+	Memo                 string            `gorm:"column:memo;type:text;not null" json:"memo"`
+	Name                 string            `gorm:"column:name;type:varchar(1);not null" json:"name"`
+	TransitionType       string            `gorm:"column:transition_type;type:varchar(1);not null" json:"transition_type"`
+	Timer                int               `gorm:"column:timer;type:int(11);not null" json:"timer"`
+	ConditionExpression  string            `gorm:"column:condition_expression;type:text;not null" json:"condition_expression"`
+	AttributeType        string            `gorm:"column:attribute_type;type:varchar(1);not null" json:"attribute_type"`
+	AlertEnable          int8              `gorm:"column:alert_enable;type:tinyint(4);not null" json:"alert_enable"`
+	AlertText            string            `gorm:"column:alert_text;type:varchar(100);not null" json:"alert_text"`
+	DestStateID          int               `gorm:"index;column:dest_state_id;type:int(11)" json:"-"`
+	WorkflowsDestState   WorkflowsState    `gorm:"association_foreignkey:dest_state_id;foreignkey:id" json:"dest_state"`
+	SourceStateID        int               `gorm:"index;column:source_state_id;type:int(11)" json:"-"`
+	WorkflowsSourceState WorkflowsState    `gorm:"association_foreignkey:dest_state_id;foreignkey:id" json:"source_state"`
+	WorkflowID           int               `gorm:"index;column:workflow_id;type:int(11);not null" json:"-"`
+	WorkflowsWorkflow    WorkflowsWorkflow `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow"`
+	DataScope            string            `json:"-" gorm:"-"`
+	Params               string            `json:"-"  gorm:"-"`
 	BaseModel
 }
 
@@ -63,6 +64,14 @@ func (w *WorkflowsTransition) Get(isRelated bool) (WorkflowsTransition, error) {
 		if wt, err := info.Get(false); err == nil {
 			wft.WorkflowsWorkflow = wt
 		}
+		w.WorkflowsDestState.ID = wft.DestStateID
+		if stat, err := w.WorkflowsDestState.Get(true); err == nil {
+			wft.WorkflowsDestState = stat
+		}
+		w.WorkflowsSourceState.ID = wft.SourceStateID
+		if stat, err := w.WorkflowsSourceState.Get(true); err == nil {
+			wft.WorkflowsSourceState = stat
+		}
 	}
 
 	return wft, nil
@@ -91,6 +100,14 @@ func (w *WorkflowsTransition) GetPage(pageSize int, pageIndex int, isRelated boo
 			}
 			if wt, err := info.Get(false); err == nil {
 				results[i].WorkflowsWorkflow = wt
+			}
+			w.WorkflowsDestState.ID = r.DestStateID
+			if stat, err := w.WorkflowsDestState.Get(true); err == nil {
+				results[i].WorkflowsDestState = stat
+			}
+			w.WorkflowsSourceState.ID = r.SourceStateID
+			if stat, err := w.WorkflowsSourceState.Get(true); err == nil {
+				results[i].WorkflowsSourceState = stat
 			}
 		}
 	}

@@ -7,20 +7,21 @@ import (
 )
 
 type Dept struct {
-	DeptId    int    `json:"deptId" gorm:"primary_key;AUTO_INCREMENT"` //部门编码
-	ParentId  int    `json:"parentId" gorm:"type:int(11);"`            //上级部门
-	DeptPath  string `json:"deptPath" gorm:"type:varchar(255);"`       //
-	DeptName  string `json:"deptName"  gorm:"type:varchar(128);"`      //部门名称
-	Sort      int    `json:"sort" gorm:"type:int(4);"`                 //排序
-	Leader    string `json:"leader" gorm:"type:varchar(128);"`         //负责人
-	Phone     string `json:"phone" gorm:"type:varchar(11);"`           //手机
-	Email     string `json:"email" gorm:"type:varchar(64);"`           //邮箱
-	Status    string `json:"status" gorm:"type:int(1);"`               //状态
-	CreateBy  string `json:"createBy" gorm:"type:varchar(64);"`
-	UpdateBy  string `json:"updateBy" gorm:"type:varchar(64);"`
-	DataScope string `json:"dataScope" gorm:"-"`
-	Params    string `json:"params" gorm:"-"`
-	Children  []Dept `json:"children" gorm:"-"`
+	DeptId    int       `json:"deptId" gorm:"primary_key;AUTO_INCREMENT"` //部门编码
+	ParentId  int       `json:"parentId" gorm:"type:int(11);"`            //上级部门
+	DeptPath  string    `json:"deptPath" gorm:"type:varchar(255);"`       //
+	DeptName  string    `json:"deptName"  gorm:"type:varchar(128);"`      //部门名称
+	Sort      int       `json:"sort" gorm:"type:int(4);"`                 //排序
+	Leader    string    `json:"leader" gorm:"type:varchar(128);"`         //负责人
+	Phone     string    `json:"phone" gorm:"type:varchar(11);"`           //手机
+	Email     string    `json:"email" gorm:"type:varchar(64);"`           //邮箱
+	Status    string    `json:"status" gorm:"type:int(1);"`               //状态
+	CreateBy  string    `json:"createBy" gorm:"type:varchar(64);"`
+	UpdateBy  string    `json:"updateBy" gorm:"type:varchar(64);"`
+	DataScope string    `json:"dataScope" gorm:"-"`
+	Params    string    `json:"params" gorm:"-"`
+	Children  []Dept    `json:"children" gorm:"-"`
+	UserSet   []SysUser `json:"user_set" gorm:"-"`
 	BaseModel
 }
 
@@ -77,7 +78,7 @@ func (e *Dept) Get() (Dept, error) {
 	return doc, nil
 }
 
-func (e *Dept) GetList() ([]Dept, error) {
+func (e *Dept) GetList(isReleated bool) ([]Dept, error) {
 	var doc []Dept
 
 	table := orm.Eloquent.Table(e.TableName())
@@ -93,6 +94,16 @@ func (e *Dept) GetList() ([]Dept, error) {
 
 	if err := table.Order("sort").Find(&doc).Error; err != nil {
 		return doc, err
+	}
+
+	if isReleated {
+		for i := range doc {
+			u := []SysUser{}
+			table := orm.Eloquent.Select("*").Table("sys_user").Where("dept_id = ?", e.DeptId)
+			if err := table.Order("sort").Find(&u).Error; err == nil {
+				doc[i].UserSet = u
+			}
+		}
 	}
 	return doc, nil
 }
@@ -202,7 +213,7 @@ func (e *Dept) Delete(id int) (success bool, err error) {
 }
 
 func (dept *Dept) SetDeptLable() (m []DeptLable, err error) {
-	deptlist, err := dept.GetList()
+	deptlist, err := dept.GetList(false)
 
 	m = make([]DeptLable, 0)
 	for i := 0; i < len(deptlist); i++ {

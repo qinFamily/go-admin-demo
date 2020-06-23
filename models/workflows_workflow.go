@@ -18,8 +18,8 @@ type WorkflowsWorkflow struct {
 	TitleTemplate         string      `gorm:"column:title_template;type:varchar(50)" json:"title_template"`
 	TypeID                int         `gorm:"index;column:type_id;type:int(11);not null" json:"-"`
 	WorkflowsWorkflowtype interface{} `gorm:"-" json:"type"`
-	DataScope             string      `json:"dataScope" gorm:"-"`
-	Params                string      `json:"params"  gorm:"-"`
+	DataScope             string      `json:"-" gorm:"-"`
+	Params                string      `json:"-"  gorm:"-"`
 	BaseModel
 }
 

@@ -60,7 +60,7 @@ func GetDept(c *gin.Context) {
 func GetDeptInit(c *gin.Context) {
 	var Dept models.Dept
 	Dept.DataScope = tools.GetUserIdStr(c)
-	result, err := Dept.GetList()
+	result, err := Dept.GetList(true)
 	tools.HasError(err, msg.NotFound, 404)
 	app.ResultOK(c, result, msg.GetSuccess)
 }

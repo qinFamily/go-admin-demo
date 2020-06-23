@@ -34,10 +34,14 @@ func GetInfo(c *gin.Context) {
 	mp["introduction"] = " am a super administrator"
 
 	mp["avatar"] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+	// mp["avatar"] = "http://m.imeitou.com/uploads/allimg/2017110610/b3c433vwhsk.jpg"
+	// mp["avatar"] = "https://wpimg.wallstcn.com/577965b9-bb9e-4e02-9f0c-095b41417191"
+	// mp["avatar"] = "https://wpimg.wallstcn.com/e7d23d71-cf19-4b90-a1cc-f56af8c0903d.png"
+	// mp["avatar"] = "https://wpimg.wallstcn.com/007ef517-bafd-4066-aae4-6883632d9646"
 	if user.Avatar != "" {
 		mp["avatar"] = user.Avatar
 	}
 	mp["name"] = user.NickName
-
+	mp["ip"] = c.ClientIP()
 	app.OK(c,mp,"")
 }
