@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
 	"time"
 )
@@ -12,11 +14,11 @@ type WorkflowsState struct {
 	UpdateTime        time.Time   `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
 	Memo              string      `gorm:"column:memo;type:text;not null" json:"memo"`
 	Name              string      `gorm:"column:name;type:varchar(50);not null" json:"name"`
-	IsHidden          int8        `gorm:"column:is_hidden;type:tinyint(4);not null" json:"is_hidden"`
+	IsHidden          bool        `gorm:"column:is_hidden;type:tinyint(4);not null" json:"is_hidden"`
 	OrderID           int         `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
-	StateType         string      `gorm:"column:state_type;type:varchar(1);not null" json:"state_type"`
-	EnableRetreat     int8        `gorm:"column:enable_retreat;type:tinyint(4);not null" json:"enable_retreat"`
-	ParticipantType   string      `gorm:"column:participant_type;type:varchar(1);not null" json:"participant_type"`
+	StateType         int         `gorm:"column:state_type;type:varchar(1);not null" json:"state_type"`
+	EnableRetreat     bool        `gorm:"column:enable_retreat;type:tinyint(4);not null" json:"enable_retreat"`
+	ParticipantType   int         `gorm:"column:participant_type;type:varchar(1);not null" json:"participant_type"`
 	WorkflowID        int         `gorm:"index;column:workflow_id;type:int(11);not null" json:"-"`
 	WorkflowsWorkflow interface{} `gorm:"association_foreignkey:workflow_id;foreignkey:id" json:"workflow"`
 	UserParticipant   interface{} `gorm:"-" json:"user_participant"`
@@ -45,213 +47,264 @@ func (w *WorkflowsState) Create() (WorkflowsState, error) {
 }
 
 // Get 获取
-func (w *WorkflowsState) Get(isRelated bool) (WorkflowsState, error) {
+func (w *WorkflowsState) Get(isRelated bool, depth int) (result WorkflowsState, err error) {
 
-	var wfs WorkflowsState
+	key := fmt.Sprintf("wfs:get:%+v:%d:%d", isRelated, depth, w.ID)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Table(w.TableName()).Order("order_id")
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
+		}
+		if err = table.First(&result).Error; err != nil {
+			return result, err
+		}
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
-	if err := table.First(&wfs).Error; err != nil {
-		return wfs, err
-	}
+		wf := WorkflowsWorkflow{
+			ID: result.WorkflowID,
+		}
 
-	wf := &WorkflowsWorkflow{
-		ID: wfs.WorkflowID,
-	}
-	if wt, err := wf.Get(isRelated); err == nil {
-		if isRelated {
-			wfs.WorkflowsWorkflow = wt
+		if depth == 1 {
+			wf, err = wf.Get(isRelated)
 		} else {
-			wfs.WorkflowsWorkflow = wt.ID
+			wf, err = wf.Get(false)
 		}
-	}
-	up := &WorkflowsStateUserParticipant{
-		StateID: wfs.ID,
-	}
-	if wt, n, err := up.GetPage(1, 200, isRelated); err == nil {
-		if n > 0 {
+		if err == nil {
 			if isRelated {
-				wfs.UserParticipant = wt
+				result.WorkflowsWorkflow = wf
 			} else {
-				wtIDs := make([]int, 0)
-				for _, wti := range wt {
-					wtIDs = append(wtIDs, wti.ID)
-				}
-				wfs.UserParticipant = wtIDs
-			}
-		} else {
-			wfs.UserParticipant = []int{}
-		}
-	}
-
-	gp := &WorkflowsStateGroupParticipant{
-		StateID: wfs.ID,
-	}
-	if wt, n, err := gp.GetPage(1, 200, isRelated); err == nil {
-		wtIDs := make([]int, 0)
-		if n > 0 {
-			if isRelated {
-				wfs.GroupParticipant = wt
-			} else {
-				for _, wti := range wt {
-					wtIDs = append(wtIDs, wti.ID)
-				}
-				wfs.GroupParticipant = wtIDs
-			}
-		} else {
-			wfs.GroupParticipant = wtIDs
-		}
-	}
-
-	rp := &WorkflowsStateRoleParticipant{
-		StateID: wfs.ID,
-	}
-	if wt, n, err := rp.GetPage(1, 200, isRelated); err == nil {
-		wtIDs := make([]int, 0)
-		if n > 0 {
-			if isRelated {
-				wfs.RoleParticipant = wt
-			} else {
-				for _, wti := range wt {
-					wtIDs = append(wtIDs, wti.ID)
-				}
-				wfs.RoleParticipant = wtIDs
-			}
-		} else {
-			wfs.RoleParticipant = wtIDs
-		}
-	}
-
-	f := &WorkflowsStateFields{
-		StateID: wfs.ID,
-	}
-	if wt, n, err := f.GetPage(1, 200, isRelated); err == nil {
-		wtIDs := make([]int, 0)
-		if n > 0 {
-			if isRelated {
-				wfs.Fields = wt
-			} else {
-				for _, wti := range wt {
-					wtIDs = append(wtIDs, wti.ID)
-				}
-				wfs.Fields = wtIDs
-			}
-		} else {
-			wfs.Fields = wtIDs
-		}
-	}
-
-	return wfs, nil
-}
-
-// Gets 获取批量结果
-func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsState, count int, err error) {
-
-	table := orm.Eloquent.Select("*").Table(w.TableName())
-	if w.WorkflowID != 0 {
-		table = table.Where("workflow_id = ?", w.WorkflowID)
-	}
-
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
-
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	for i, r := range results {
-		info := &WorkflowsWorkflow{
-			ID: r.WorkflowID,
-		}
-		if wt, err := info.Get(isRelated); err == nil {
-			if isRelated {
-				results[i].WorkflowsWorkflow = wt
-			} else {
-				results[i].WorkflowsWorkflow = wt.ID
+				result.WorkflowsWorkflow = wf.ID
 			}
 		}
 		up := &WorkflowsStateUserParticipant{
-			StateID: r.ID,
+			StateID: result.ID,
 		}
-		if wt, n, err := up.GetPage(1, 200, isRelated); err == nil {
+		if wt, n, err := up.GetPage(200, 1, isRelated); err == nil {
 			if n > 0 {
 				if isRelated {
-					results[i].UserParticipant = wt
+					users := make([]SysUserB, 0)
+					for _, iwt := range wt {
+						users = append(users, iwt.SysUser)
+					}
+					result.UserParticipant = users
 				} else {
 					wtIDs := make([]int, 0)
 					for _, wti := range wt {
-						wtIDs = append(wtIDs, wti.ID)
+						wtIDs = append(wtIDs, wti.UserID)
 					}
-					results[i].UserParticipant = wtIDs
+					result.UserParticipant = wtIDs
 				}
 			} else {
-				results[i].UserParticipant = []int{}
+				result.UserParticipant = []int{}
 			}
 		}
 
 		gp := &WorkflowsStateGroupParticipant{
-			StateID: r.ID,
+			StateID: result.ID,
 		}
-		if wt, n, err := gp.GetPage(1, 200, isRelated); err == nil {
+		if wt, n, err := gp.GetPage(200, 1, isRelated); err == nil {
 			wtIDs := make([]int, 0)
 			if n > 0 {
 				if isRelated {
-					results[i].GroupParticipant = wt
+					depts := make([]Dept, 0)
+					for _, iwt := range wt {
+						depts = append(depts, iwt.SysDept)
+					}
+					result.GroupParticipant = depts
 				} else {
 					for _, wti := range wt {
-						wtIDs = append(wtIDs, wti.ID)
+						wtIDs = append(wtIDs, wti.GroupID)
 					}
-					results[i].GroupParticipant = wtIDs
+					result.GroupParticipant = wtIDs
 				}
 			} else {
-				results[i].GroupParticipant = wtIDs
+				result.GroupParticipant = wtIDs
 			}
 		}
 
 		rp := &WorkflowsStateRoleParticipant{
-			StateID: r.ID,
+			StateID: result.ID,
 		}
-		if wt, n, err := rp.GetPage(1, 200, isRelated); err == nil {
+		if wt, n, err := rp.GetPage(200, 1, isRelated); err == nil {
 			wtIDs := make([]int, 0)
 			if n > 0 {
 				if isRelated {
-					results[i].RoleParticipant = wt
+					wfsr := make([]SysRole, 0)
+					for _, iwt := range wt {
+						wfsr = append(wfsr, iwt.SysRole)
+					}
+					result.RoleParticipant = wfsr
 				} else {
 					for _, wti := range wt {
-						wtIDs = append(wtIDs, wti.ID)
+						wtIDs = append(wtIDs, wti.RoleID)
 					}
-					results[i].RoleParticipant = wtIDs
+					result.RoleParticipant = wtIDs
 				}
 			} else {
-				results[i].RoleParticipant = wtIDs
+				result.RoleParticipant = wtIDs
 			}
 		}
 
 		f := &WorkflowsStateFields{
-			StateID: r.ID,
+			StateID: result.ID,
 		}
-		if wt, n, err := f.GetPage(1, 200, isRelated); err == nil {
+		if wt, n, err := f.GetPage(200, 1, isRelated); err == nil {
 			wtIDs := make([]int, 0)
 			if n > 0 {
 				if isRelated {
-					results[i].Fields = wt
+					wff := make([]WorkflowsCustomfield, 0)
+					for _, iwt := range wt {
+						wff = append(wff, iwt.WorkflowsCustomfield)
+					}
+					result.Fields = wff
 				} else {
 					for _, wti := range wt {
-						wtIDs = append(wtIDs, wti.ID)
+						wtIDs = append(wtIDs, wti.CustomfieldID)
 					}
-					results[i].Fields = wtIDs
+					result.Fields = wtIDs
 				}
 			} else {
-				results[i].Fields = wtIDs
+				result.Fields = wtIDs
 			}
 		}
+		return result, nil
 	}
-	table.Count(&count)
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		result = val.(WorkflowsState)
+	}
 	return
+}
 
+// Gets 获取批量结果
+func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool, depth int) (results []WorkflowsState, count int, err error) {
+
+	key := fmt.Sprintf("wfs:getp:%d:%d:%+v:%d:%d", pageSize, pageIndex, isRelated, depth, w.WorkflowID)
+
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName()).Order("order_id")
+		if w.WorkflowID != 0 {
+			table = table.Where("workflow_id = ?", w.WorkflowID)
+		}
+
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return nil, err
+		}
+		for i, r := range results {
+			info := &WorkflowsWorkflow{
+				ID: r.WorkflowID,
+			}
+			if wt, err := info.Get(isRelated); err == nil {
+				if isRelated {
+					results[i].WorkflowsWorkflow = wt
+				} else {
+					results[i].WorkflowsWorkflow = wt.ID
+				}
+			}
+			up := &WorkflowsStateUserParticipant{
+				StateID: r.ID,
+			}
+			if wt, n, err := up.GetPage(200, 1, isRelated); err == nil {
+				if n > 0 {
+					if isRelated {
+						users := make([]SysUserB, 0)
+						for _, iwt := range wt {
+							users = append(users, iwt.SysUser)
+						}
+						results[i].UserParticipant = users
+					} else {
+						wtIDs := make([]int, 0)
+						for _, wti := range wt {
+							wtIDs = append(wtIDs, wti.UserID)
+						}
+						results[i].UserParticipant = wtIDs
+					}
+				} else {
+					results[i].UserParticipant = []int{}
+				}
+			}
+
+			gp := &WorkflowsStateGroupParticipant{
+				StateID: r.ID,
+			}
+			if wt, n, err := gp.GetPage(200, 1, isRelated); err == nil {
+				wtIDs := make([]int, 0)
+				if n > 0 {
+					if isRelated {
+						depts := make([]Dept, 0)
+						for _, iwt := range wt {
+							depts = append(depts, iwt.SysDept)
+						}
+						results[i].GroupParticipant = depts
+					} else {
+						for _, wti := range wt {
+							wtIDs = append(wtIDs, wti.GroupID)
+						}
+						results[i].GroupParticipant = wtIDs
+					}
+				} else {
+					results[i].GroupParticipant = wtIDs
+				}
+			}
+
+			rp := &WorkflowsStateRoleParticipant{
+				StateID: r.ID,
+			}
+			if wt, n, err := rp.GetPage(200, 1, isRelated); err == nil {
+				wtIDs := make([]int, 0)
+				if n > 0 {
+					if isRelated {
+						wfsr := make([]SysRole, 0)
+						for _, iwt := range wt {
+							wfsr = append(wfsr, iwt.SysRole)
+						}
+						results[i].RoleParticipant = wfsr
+					} else {
+						for _, wti := range wt {
+							wtIDs = append(wtIDs, wti.RoleID)
+						}
+						results[i].RoleParticipant = wtIDs
+					}
+				} else {
+					results[i].RoleParticipant = wtIDs
+				}
+			}
+
+			f := &WorkflowsStateFields{
+				StateID: r.ID,
+			}
+			if wt, n, err := f.GetPage(200, 1, isRelated); err == nil {
+				wtIDs := make([]int, 0)
+				if n > 0 {
+					if isRelated {
+						wff := make([]WorkflowsCustomfield, 0)
+						for _, iwt := range wt {
+							wff = append(wff, iwt.WorkflowsCustomfield)
+						}
+						results[i].Fields = wff
+					} else {
+						for _, wti := range wt {
+							wtIDs = append(wtIDs, wti.CustomfieldID)
+						}
+						results[i].Fields = wtIDs
+					}
+				} else {
+					results[i].Fields = wtIDs
+				}
+			}
+		}
+		table.Count(&count)
+		return results, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		results = val.([]WorkflowsState)
+		count = len(results)
+	}
+	return
 }
 
 // 更新WorkflowsState

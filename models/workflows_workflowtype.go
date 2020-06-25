@@ -1,7 +1,8 @@
 package models
 
 import (
-	_ "time"
+	"fmt"
+	"go-admin-demo/cache"
 
 	orm "go-admin-demo/database"
 )
@@ -38,18 +39,28 @@ func (w *WorkflowsWorkflowtype) Create() (wt WorkflowsWorkflowtype, err error) {
 	return
 }
 
-func (w *WorkflowsWorkflowtype) Get() (wt WorkflowtypeWorkflowsSet, err error) {
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
-	err = table.First(&wt).Error
-	if err == nil {
-		wf := &WorkflowsWorkflow{}
-		res, _, err := wf.GetPage(1, 20, false)
-		if err == nil {
-			wt.WorkflowSet = res
+func (w *WorkflowsWorkflowtype) Get() (result WorkflowtypeWorkflowsSet, err error) {
+	key := fmt.Sprintf("wfwt:get:%d", w.ID)
+
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Table(w.TableName()).Order("order_id")
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
 		}
+		err = table.First(&result).Error
+		if err == nil {
+			wf := &WorkflowsWorkflow{}
+			res, _, err := wf.GetPage(1, 20, false)
+			if err == nil {
+				result.WorkflowSet = res
+			}
+		}
+		return result, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	// log.Println("***************************** cache.LRU().GetWithLoader", key, "val", val, "err", err)
+	if val != nil {
+		result = val.(WorkflowtypeWorkflowsSet)
 	}
 	return
 }
@@ -57,23 +68,35 @@ func (w *WorkflowsWorkflowtype) Get() (wt WorkflowtypeWorkflowsSet, err error) {
 // Gets 获取批量结果
 func (w *WorkflowsWorkflowtype) GetPage(pageSize int, pageIndex int) (results []WorkflowtypeWorkflowsSet, count int, err error) {
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
+	key := fmt.Sprintf("wfwt:getp:%d:%d", pageSize, pageIndex)
 
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName()).Order("order_id")
 
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	table.Count(&count)
-	for i := range results {
-		wf := &WorkflowsWorkflow{}
-		res, _, err := wf.GetPage(1, 20, false)
-		if err == nil {
-			results[i].WorkflowSet = res
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
+
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return results, err
 		}
+		table.Count(&count)
+		for i := range results {
+			wf := &WorkflowsWorkflow{}
+			res, _, err := wf.GetPage(1, 20, false)
+			if err == nil {
+				results[i].WorkflowSet = res
+			}
+		}
+		return results, err
+	}
+
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	// log.Println("***************************** cache.LRU().GetWithLoader", key, "val", val, "err", err)
+	if val != nil {
+		results = val.([]WorkflowtypeWorkflowsSet)
+		count = len(results)
 	}
 	return
 }

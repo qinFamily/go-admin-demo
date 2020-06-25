@@ -72,6 +72,7 @@ func InitRouter() *gin.Engine {
 		apiv1.GET("/gen/preview/:tableId", Preview)
 		apiv1.GET("/menuTreeselect", system.GetMenuTreeelect)
 		apiv1.GET("/dict/databytype/:dictType", dict.GetDictDataByDictType)
+		apiv1.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
 
 	}
 
@@ -173,7 +174,7 @@ func InitRouter() *gin.Engine {
 
 		auth.GET("/workflow/customfield/", workflow.GetWorkFlowCustomField)
 		auth.GET("/workflow/state/", workflow.GetWorkFlowState)
-		auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
+		// auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
 		auth.PUT("/workflow/wfconf/:confId", workflow.UpdateWorkFlow)
 		// auth.PUT("", workflow.UpdateWorkFlow)
 		auth.GET("/sys/user/", system.GetSysUserWorkflow)

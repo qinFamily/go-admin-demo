@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
 	"time"
 )
@@ -11,12 +13,12 @@ type WorkflowsTransition struct {
 	CreateTime           time.Time         `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
 	UpdateTime           time.Time         `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
 	Memo                 string            `gorm:"column:memo;type:text;not null" json:"memo"`
-	Name                 string            `gorm:"column:name;type:varchar(1);not null" json:"name"`
-	TransitionType       string            `gorm:"column:transition_type;type:varchar(1);not null" json:"transition_type"`
+	Name                 int               `gorm:"column:name;type:varchar(1);not null" json:"name"`
+	TransitionType       int               `gorm:"column:transition_type;type:varchar(1);not null" json:"transition_type"`
 	Timer                int               `gorm:"column:timer;type:int(11);not null" json:"timer"`
 	ConditionExpression  string            `gorm:"column:condition_expression;type:text;not null" json:"condition_expression"`
-	AttributeType        string            `gorm:"column:attribute_type;type:varchar(1);not null" json:"attribute_type"`
-	AlertEnable          int8              `gorm:"column:alert_enable;type:tinyint(4);not null" json:"alert_enable"`
+	AttributeType        int               `gorm:"column:attribute_type;type:varchar(1);not null" json:"attribute_type"`
+	AlertEnable          bool              `gorm:"column:alert_enable;type:tinyint(4);not null" json:"alert_enable"`
 	AlertText            string            `gorm:"column:alert_text;type:varchar(100);not null" json:"alert_text"`
 	DestStateID          int               `gorm:"index;column:dest_state_id;type:int(11)" json:"-"`
 	WorkflowsDestState   WorkflowsState    `gorm:"association_foreignkey:dest_state_id;foreignkey:id" json:"dest_state"`
@@ -46,74 +48,91 @@ func (w *WorkflowsTransition) Create() (WorkflowsTransition, error) {
 }
 
 // Get 获取
-func (w *WorkflowsTransition) Get(isRelated bool) (WorkflowsTransition, error) {
+func (w *WorkflowsTransition) Get(isRelated bool) (result WorkflowsTransition, err error) {
 
-	var wft WorkflowsTransition
+	key := fmt.Sprintf("wft:get:%+v:%d", isRelated, w.ID)
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
-	if err := table.First(&wft).Error; err != nil {
-		return wft, err
-	}
-	if isRelated {
-		info := &WorkflowsWorkflow{
-			ID: wft.WorkflowID,
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Table(w.TableName())
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
 		}
-		if wt, err := info.Get(false); err == nil {
-			wft.WorkflowsWorkflow = wt
+		if err = table.First(&result).Error; err != nil {
+			return result, err
 		}
-		w.WorkflowsDestState.ID = wft.DestStateID
-		if stat, err := w.WorkflowsDestState.Get(true); err == nil {
-			wft.WorkflowsDestState = stat
+		if isRelated {
+			info := &WorkflowsWorkflow{
+				ID: result.WorkflowID,
+			}
+			if wt, err := info.Get(true); err == nil {
+				result.WorkflowsWorkflow = wt
+			}
+			w.WorkflowsDestState.ID = result.DestStateID
+			if stat, err := w.WorkflowsDestState.Get(true, 2); err == nil {
+				result.WorkflowsDestState = stat
+			}
+			w.WorkflowsSourceState.ID = result.SourceStateID
+			if stat, err := w.WorkflowsSourceState.Get(true, 2); err == nil {
+				result.WorkflowsSourceState = stat
+			}
 		}
-		w.WorkflowsSourceState.ID = wft.SourceStateID
-		if stat, err := w.WorkflowsSourceState.Get(true); err == nil {
-			wft.WorkflowsSourceState = stat
-		}
-	}
 
-	return wft, nil
+		return result, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		result = val.(WorkflowsTransition)
+	}
+	return
 }
 
 // Gets 获取批量结果
-func (w *WorkflowsTransition) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsTransition, count int, err error) {
+func (w *WorkflowsTransition) GetPage(pageSize int, pageIndex int, isRelated bool, depth int) (results []WorkflowsTransition, count int, err error) {
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
-	if w.WorkflowID != 0 {
-		table = table.Where("workflow_id = ?", w.WorkflowID)
-	}
+	key := fmt.Sprintf("wft:getp:%d:%d:%+v:%d:%d", pageSize, pageIndex, isRelated, depth, w.WorkflowID)
 
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName())
+		if w.WorkflowID != 0 {
+			table = table.Where("workflow_id = ?", w.WorkflowID)
+		}
 
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	if isRelated {
-		for i, r := range results {
-			info := &WorkflowsWorkflow{
-				ID: r.WorkflowID,
-			}
-			if wt, err := info.Get(false); err == nil {
-				results[i].WorkflowsWorkflow = wt
-			}
-			w.WorkflowsDestState.ID = r.DestStateID
-			if stat, err := w.WorkflowsDestState.Get(true); err == nil {
-				results[i].WorkflowsDestState = stat
-			}
-			w.WorkflowsSourceState.ID = r.SourceStateID
-			if stat, err := w.WorkflowsSourceState.Get(true); err == nil {
-				results[i].WorkflowsSourceState = stat
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
+
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return results, err
+		}
+		if isRelated {
+			for i, r := range results {
+				info := &WorkflowsWorkflow{
+					ID: r.WorkflowID,
+				}
+				if wt, err := info.Get(true); err == nil {
+					results[i].WorkflowsWorkflow = wt
+				}
+				w.WorkflowsDestState.ID = r.DestStateID
+				if stat, err := w.WorkflowsDestState.Get(true, 2); err == nil {
+					results[i].WorkflowsDestState = stat
+				}
+				w.WorkflowsSourceState.ID = r.SourceStateID
+				if stat, err := w.WorkflowsSourceState.Get(true, 2); err == nil {
+					results[i].WorkflowsSourceState = stat
+				}
 			}
 		}
+		table.Count(&count)
+		return results, err
 	}
-	table.Count(&count)
-	return
 
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		results = val.([]WorkflowsTransition)
+		count = len(results)
+	}
+	return
 }
 
 // 更新WorkflowsTransition

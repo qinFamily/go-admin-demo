@@ -32,7 +32,7 @@ func GetWorkFlowTransition(c *gin.Context) {
 	data.WorkflowID = workflowID
 
 	data.DataScope = tools.GetUserIdStr(c)
-	result, count, err := data.GetPage(pageSize, pageIndex, true)
+	result, count, err := data.GetPage(pageSize, pageIndex, true, 1)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	res := &app.WorkFlowResponse{

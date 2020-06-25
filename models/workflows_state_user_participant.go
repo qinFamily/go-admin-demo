@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
 )
 
@@ -10,7 +12,7 @@ type WorkflowsStateUserParticipant struct {
 	StateID        int            `gorm:"unique_index:workflows_state_user_participant_state_id_user_id_uniq;index;column:state_id;type:int(11);not null" json:"state_id"`
 	WorkflowsState WorkflowsState `gorm:"association_foreignkey:state_id;foreignkey:id" json:"workflows_state_list"`
 	UserID         int            `gorm:"unique_index:workflows_state_user_participant_state_id_user_id_uniq;index;column:user_id;type:int(11);not null" json:"user_id"`
-	SysUser        interface{}    `gorm:"association_foreignkey:user_id;foreignkey:user_id" json:"sys_user_list"`
+	SysUser        SysUserB       `gorm:"association_foreignkey:user_id;foreignkey:user_id" json:"sys_user_list"`
 	DataScope      string         `json:"-" gorm:"-"`
 	Params         string         `json:"-"  gorm:"-"`
 	BaseModel
@@ -33,78 +35,95 @@ func (w *WorkflowsStateUserParticipant) Create() (WorkflowsStateUserParticipant,
 }
 
 // Get 获取
-func (w *WorkflowsStateUserParticipant) Get(isRelated bool) (WorkflowsStateUserParticipant, error) {
+func (w *WorkflowsStateUserParticipant) Get(isRelated bool) (result WorkflowsStateUserParticipant, err error) {
 
-	var wft WorkflowsStateUserParticipant
+	key := fmt.Sprintf("wfsup:get:%+v:%d:%d:%d", isRelated, w.ID, w.StateID, w.UserID)
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
-
-	if w.StateID != 0 {
-		table = table.Where("state_id = ?", w.StateID)
-	}
-	if w.UserID != 0 {
-		table = table.Where("user_id = ?", w.StateID)
-	}
-
-	if err := table.First(&wft).Error; err != nil {
-		return wft, err
-	}
-	if isRelated {
-		info := &WorkflowsState{
-			ID: wft.StateID,
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Table(w.TableName())
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
 		}
-		if wt, err := info.Get(false); err == nil {
-			wft.WorkflowsState = wt
-		}
-		f := &SysUser{}
-		f.UserId = wft.UserID
-		if wt, err := f.Get(); err == nil {
-			wft.SysUser = wt.SysUserB
-		}
-	}
 
-	return wft, nil
+		if w.StateID != 0 {
+			table = table.Where("state_id = ?", w.StateID)
+		}
+		if w.UserID != 0 {
+			table = table.Where("user_id = ?", w.UserID)
+		}
+
+		if err = table.First(&result).Error; err != nil {
+			return result, err
+		}
+		if isRelated {
+			info := &WorkflowsState{
+				ID: result.StateID,
+			}
+			if wt, err := info.Get(false, 2); err == nil {
+				result.WorkflowsState = wt
+			}
+			f := &SysUser{}
+			f.UserId = result.UserID
+			if wt, err := f.Get(); err == nil {
+				result.SysUser = wt.SysUserB
+			}
+		}
+
+		return result, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		result = val.(WorkflowsStateUserParticipant)
+	}
+	return
 }
 
 // Gets 获取批量结果
 func (w *WorkflowsStateUserParticipant) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsStateUserParticipant, count int, err error) {
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
+	key := fmt.Sprintf("wfsup:getp:%d:%d:%+v:%d:%d", pageSize, pageIndex, isRelated, w.StateID, w.UserID)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName())
 
-	if w.StateID != 0 {
-		table = table.Where("state_id = ?", w.StateID)
-	}
-	if w.UserID != 0 {
-		table = table.Where("user_id = ?", w.StateID)
-	}
+		if w.StateID != 0 {
+			table = table.Where("state_id = ?", w.StateID)
+		}
+		if w.UserID != 0 {
+			table = table.Where("user_id = ?", w.UserID)
+		}
 
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
 
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	if isRelated {
-		for i, r := range results {
-			info := &WorkflowsState{
-				ID: r.StateID,
-			}
-			if wt, err := info.Get(false); err == nil {
-				results[i].WorkflowsState = wt
-			}
-			f := &SysUser{}
-			f.UserId = r.UserID
-			if wt, err := f.Get(); err == nil {
-				results[i].SysUser = wt
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return results, err
+		}
+		if isRelated {
+			for i, r := range results {
+				info := &WorkflowsState{
+					ID: r.StateID,
+				}
+				if wt, err := info.Get(false, 2); err == nil {
+					results[i].WorkflowsState = wt
+				}
+				f := &SysUser{}
+				f.UserId = r.UserID
+				if wt, err := f.Get(); err == nil {
+					results[i].SysUser = wt.SysUserB
+				}
 			}
 		}
+		table.Count(&count)
+		return results, err
 	}
-	table.Count(&count)
+
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		results = val.([]WorkflowsStateUserParticipant)
+		count = len(results)
+	}
 	return
 
 }

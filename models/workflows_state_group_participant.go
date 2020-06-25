@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
 )
 
@@ -33,80 +35,98 @@ func (w *WorkflowsStateGroupParticipant) Create() (WorkflowsStateGroupParticipan
 }
 
 // Get 获取
-func (w *WorkflowsStateGroupParticipant) Get(isRelated bool) (WorkflowsStateGroupParticipant, error) {
+func (w *WorkflowsStateGroupParticipant) Get(isRelated bool) (result WorkflowsStateGroupParticipant, err error) {
 
-	var wft WorkflowsStateGroupParticipant
+	key := fmt.Sprintf("wfsgp:get:%+v:%d:%d:%d", isRelated, w.ID, w.StateID, w.GroupID)
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
+	getter := func() (interface{}, error) {
 
-	if w.StateID != 0 {
-		table = table.Where("state_id = ?", w.StateID)
-	}
-	if w.GroupID != 0 {
-		table = table.Where("group_id = ?", w.StateID)
-	}
-
-	if err := table.First(&wft).Error; err != nil {
-		return wft, err
-	}
-	if isRelated {
-		info := &WorkflowsState{
-			ID: wft.StateID,
+		table := orm.Eloquent.Table(w.TableName())
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
 		}
-		if wt, err := info.Get(false); err == nil {
-			wft.WorkflowsState = wt
-		}
-		f := &Dept{
-			DeptId: wft.GroupID,
-		}
-		if wt, err := f.Get(); err == nil {
-			wft.SysDept = wt
-		}
-	}
 
-	return wft, nil
+		if w.StateID != 0 {
+			table = table.Where("state_id = ?", w.StateID)
+		}
+		if w.GroupID != 0 {
+			table = table.Where("group_id = ?", w.GroupID)
+		}
+
+		if err = table.First(&result).Error; err != nil {
+			return result, err
+		}
+		if isRelated {
+			info := &WorkflowsState{
+				ID: result.StateID,
+			}
+			if wt, err := info.Get(false, 2); err == nil {
+				result.WorkflowsState = wt
+			}
+			f := &Dept{
+				DeptId: result.GroupID,
+			}
+			if wt, err := f.Get(); err == nil {
+				result.SysDept = wt
+			}
+		}
+
+		return result, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		result = val.(WorkflowsStateGroupParticipant)
+	}
+	return
 }
 
 // Gets 获取批量结果
 func (w *WorkflowsStateGroupParticipant) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsStateGroupParticipant, count int, err error) {
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
+	key := fmt.Sprintf("wfsgp:getp:%d:%d:%+v:%d:%d", pageSize, pageIndex, isRelated, w.StateID, w.GroupID)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName())
 
-	if w.StateID != 0 {
-		table = table.Where("state_id = ?", w.StateID)
-	}
-	if w.GroupID != 0 {
-		table = table.Where("group_id = ?", w.StateID)
-	}
+		if w.StateID != 0 {
+			table = table.Where("state_id = ?", w.StateID)
+		}
+		if w.GroupID != 0 {
+			table = table.Where("group_id = ?", w.GroupID)
+		}
 
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
 
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	if isRelated {
-		for i, r := range results {
-			info := &WorkflowsState{
-				ID: r.StateID,
-			}
-			if wt, err := info.Get(false); err == nil {
-				results[i].WorkflowsState = wt
-			}
-			f := &Dept{
-				DeptId: r.GroupID,
-			}
-			if wt, err := f.Get(); err == nil {
-				results[i].SysDept = wt
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return results, err
+		}
+		if isRelated {
+			for i, r := range results {
+				info := &WorkflowsState{
+					ID: r.StateID,
+				}
+				if wt, err := info.Get(false, 2); err == nil {
+					results[i].WorkflowsState = wt
+				}
+				f := &Dept{
+					DeptId: r.GroupID,
+				}
+				if wt, err := f.Get(); err == nil {
+					results[i].SysDept = wt
+				}
 			}
 		}
+		table.Count(&count)
+		return results, err
 	}
-	table.Count(&count)
+
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		results = val.([]WorkflowsStateGroupParticipant)
+		count = len(results)
+	}
 	return
 
 }

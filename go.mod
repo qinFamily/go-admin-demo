@@ -13,9 +13,12 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-openapi/spec v0.19.7 // indirect
 	github.com/go-openapi/swag v0.19.8 // indirect
+	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.1.1
+	github.com/hnlq715/golang-lru v0.2.0
 	github.com/jinzhu/gorm v1.9.10
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/mailru/easyjson v0.7.1 // indirect
@@ -33,6 +36,7 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.5
 	github.com/ugorji/go v1.1.7 // indirect
+	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	golang.org/x/tools v0.0.0-20200402223321-bcf690261a44 // indirect

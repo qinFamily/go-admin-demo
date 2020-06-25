@@ -1,8 +1,9 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
-	_ "time"
 )
 
 // WorkflowsWorkflow [...]
@@ -39,60 +40,80 @@ func (w *WorkflowsWorkflow) Create() (WorkflowsWorkflow, error) {
 }
 
 // Get 获取
-func (w *WorkflowsWorkflow) Get(isRelated bool) (WorkflowsWorkflow, error) {
+func (w *WorkflowsWorkflow) Get(isRelated bool) (result WorkflowsWorkflow, err error) {
 
-	var doc WorkflowsWorkflow
+	key := fmt.Sprintf("wfw:get:%+v:%d", isRelated, w.ID)
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
-	}
-	if err := table.First(&doc).Error; err != nil {
-		return doc, err
-	}
-	if isRelated {
-		info := &WorkflowsWorkflowtype{
-			ID: doc.TypeID,
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Table(w.TableName())
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
 		}
-		if wt, err := info.Get(); err == nil {
-			doc.WorkflowsWorkflowtype = wt
+		if err = table.First(&result).Error; err != nil {
+			return result, err
 		}
-	} else {
-		doc.WorkflowsWorkflowtype = doc.TypeID
-	}
+		if isRelated {
+			info := &WorkflowsWorkflowtype{
+				ID: result.TypeID,
+			}
+			if wt, err := info.Get(); err == nil {
+				result.WorkflowsWorkflowtype = wt
+			}
+		} else {
+			result.WorkflowsWorkflowtype = result.TypeID
+		}
 
-	return doc, nil
+		return result, err
+	}
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	// log.Println("***************************** cache.LRU().GetWithLoader", key, "val", val, "err", err)
+	if val != nil {
+		result = val.(WorkflowsWorkflow)
+	}
+	return
 }
 
 // Gets 获取批量结果
 func (w *WorkflowsWorkflow) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsWorkflow, count int, err error) {
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
-	if w.TypeID != 0 {
-		table = table.Where("type_id = ?", w.TypeID)
-	}
+	key := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", pageSize, pageIndex, isRelated, w.TypeID)
 
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
-
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
-	}
-	for i, r := range results {
-		if isRelated {
-			info := &WorkflowsWorkflowtype{
-				ID: r.TypeID,
-			}
-			if wt, err := info.Get(); err == nil {
-				results[i].WorkflowsWorkflowtype = wt
-			}
-		} else {
-			results[i].WorkflowsWorkflowtype = r.TypeID
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName())
+		if w.TypeID != 0 {
+			table = table.Where("type_id = ?", w.TypeID)
 		}
+
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
+
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return results, err
+		}
+		for i, r := range results {
+			if isRelated {
+				info := &WorkflowsWorkflowtype{
+					ID: r.TypeID,
+				}
+				if wt, err := info.Get(); err == nil {
+					results[i].WorkflowsWorkflowtype = wt
+				}
+			} else {
+				results[i].WorkflowsWorkflowtype = r.TypeID
+			}
+		}
+		table.Count(&count)
+		return results, err
 	}
-	table.Count(&count)
+
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	// log.Println("***************************** cache.LRU().GetWithLoader", key, "val", val, "err", err)
+	if val != nil {
+		results = val.([]WorkflowsWorkflow)
+		count = len(results)
+	}
 	return
 
 }

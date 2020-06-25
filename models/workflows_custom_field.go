@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
 	"time"
 )
@@ -11,8 +13,8 @@ type WorkflowsCustomfield struct {
 	CreateTime          time.Time `gorm:"column:create_time;type:datetime;not null" json:"create_time"`
 	UpdateTime          time.Time `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
 	Memo                string    `gorm:"column:memo;type:text;not null" json:"memo"`
-	FieldAttribute      int8      `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
-	FieldType           string    `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
+	FieldAttribute      bool      `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
+	FieldType           int    `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
 	FieldKey            string    `gorm:"column:field_key;type:varchar(50);not null" json:"field_key"`
 	FieldName           string    `gorm:"column:field_name;type:varchar(50);not null" json:"field_name"`
 	OrderID             int       `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
@@ -45,58 +47,73 @@ func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
 }
 
 // Get 获取
-func (w *WorkflowsCustomfield) Get(isRelated bool) (WorkflowsCustomfield, error) {
+func (w *WorkflowsCustomfield) Get(isRelated bool) (result WorkflowsCustomfield, err error) {
 
-	var wft WorkflowsCustomfield
+	key := fmt.Sprintf("wfc:get:%+v:%d", isRelated, w.ID)
+	getter := func() (interface{}, error) {
 
-	table := orm.Eloquent.Table(w.TableName())
-	if w.ID != 0 {
-		table = table.Where("id = ?", w.ID)
+		table := orm.Eloquent.Table(w.TableName()).Order("order_id")
+		if w.ID != 0 {
+			table = table.Where("id = ?", w.ID)
+		}
+		if err = table.First(&result).Error; err != nil {
+			return result, err
+		}
+		// if isRelated {
+		// 	info := &WorkflowsWorkflow{
+		// 		ID: result.WorkflowID,
+		// 	}
+		// 	if wt, err := info.Get(false); err == nil {
+		// 		result.WorkflowsWorkflow = wt
+		// 	}
+		// }
+
+		return result, nil
 	}
-	if err := table.First(&wft).Error; err != nil {
-		return wft, err
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		result = val.(WorkflowsCustomfield)
 	}
-	// if isRelated {
-	// 	info := &WorkflowsWorkflow{
-	// 		ID: wft.WorkflowID,
-	// 	}
-	// 	if wt, err := info.Get(false); err == nil {
-	// 		wft.WorkflowsWorkflow = wt
-	// 	}
-	// }
-
-	return wft, nil
+	return
 }
 
 // Gets 获取批量结果
 func (w *WorkflowsCustomfield) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsCustomfield, count int, err error) {
+	key := fmt.Sprintf("wfc:getp:%d:%d:%+v:%d", pageSize, pageIndex, isRelated, w.WorkflowID)
 
-	table := orm.Eloquent.Select("*").Table(w.TableName())
-	if w.WorkflowID != 0 {
-		table = table.Where("workflow_id = ?", w.WorkflowID)
+	getter := func() (interface{}, error) {
+		table := orm.Eloquent.Select("*").Table(w.TableName()).Order("order_id")
+		if w.WorkflowID != 0 {
+			table = table.Where("workflow_id = ?", w.WorkflowID)
+		}
+
+		// 数据权限控制(如果不需要数据权限请将此处去掉)
+		//dataPermission := new(DataPermission)
+		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		//table = dataPermission.GetDataScope(e.TableName(), table)
+
+		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
+			return nil, err
+		}
+		// if isRelated {
+		// 	for i, r := range results {
+		// 		info := &WorkflowsWorkflow{
+		// 			ID: r.WorkflowID,
+		// 		}
+		// 		if wt, err := info.Get(false); err == nil {
+		// 			results[i].WorkflowsWorkflow = wt
+		// 		}
+		// 	}
+		// }
+		table.Count(&count)
+		return results, err
 	}
-
-	// 数据权限控制(如果不需要数据权限请将此处去掉)
-	//dataPermission := new(DataPermission)
-	//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-	//table = dataPermission.GetDataScope(e.TableName(), table)
-
-	if err := table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&results).Error; err != nil {
-		return nil, 0, err
+	val, err := cache.LRU().GetWithLoader(key, getter)
+	if val != nil {
+		results = val.([]WorkflowsCustomfield)
+		count = len(results)
 	}
-	// if isRelated {
-	// 	for i, r := range results {
-	// 		info := &WorkflowsWorkflow{
-	// 			ID: r.WorkflowID,
-	// 		}
-	// 		if wt, err := info.Get(false); err == nil {
-	// 			results[i].WorkflowsWorkflow = wt
-	// 		}
-	// 	}
-	// }
-	table.Count(&count)
 	return
-
 }
 
 // 更新WorkflowsCustomfield
