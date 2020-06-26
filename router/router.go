@@ -6,6 +6,7 @@ import (
 	"go-admin-demo/apis/monitor"
 	"go-admin-demo/apis/system"
 	"go-admin-demo/apis/system/dict"
+	"go-admin-demo/apis/tickets"
 	. "go-admin-demo/apis/tools"
 	"go-admin-demo/apis/workflow"
 	_ "go-admin-demo/docs"
@@ -72,7 +73,7 @@ func InitRouter() *gin.Engine {
 		apiv1.GET("/gen/preview/:tableId", Preview)
 		apiv1.GET("/menuTreeselect", system.GetMenuTreeelect)
 		apiv1.GET("/dict/databytype/:dictType", dict.GetDictDataByDictType)
-		apiv1.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
+		// apiv1.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
 
 	}
 
@@ -174,12 +175,21 @@ func InitRouter() *gin.Engine {
 
 		auth.GET("/workflow/customfield/", workflow.GetWorkFlowCustomField)
 		auth.GET("/workflow/state/", workflow.GetWorkFlowState)
-		// auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
+		auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
 		auth.PUT("/workflow/wfconf/:confId", workflow.UpdateWorkFlow)
 		// auth.PUT("", workflow.UpdateWorkFlow)
 		auth.GET("/sys/user/", system.GetSysUserWorkflow)
 		auth.GET("/role/", system.GetRoleInit)
 		auth.GET("/dept/", system.GetDeptInit)
+
+		// 工单系统
+		auth.GET("/ticket/ticket/", tickets.GetTicketsTicketList)
+		auth.POST("/ticket/ticket/", tickets.InsertTicketsTicket)
+		auth.DELETE("/ticket/ticket/bulk_delete/", tickets.DeleteTicketsTicket)
+		auth.PUT("/ticket/ticket/:id/", tickets.UpdateTicketsTicket) // 驳回工单
+		auth.GET("/ticket/ticketflowlog/", tickets.GetTicketsTicketflowlogList)
+		auth.GET("/ticket/ticketcustomfield/", tickets.GetTicketsTicketcustomfieldList)
+		auth.GET("/ticket/ticketuser/", tickets.GetTicketsTicketuserList)
 
 	}
 	//r.NoRoute(authMiddleware.MiddlewareFunc(), NoFound)

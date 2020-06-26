@@ -50,7 +50,7 @@ func (w *WorkflowsWorkflowtype) Get() (result WorkflowtypeWorkflowsSet, err erro
 		err = table.First(&result).Error
 		if err == nil {
 			wf := &WorkflowsWorkflow{}
-			res, _, err := wf.GetPage(1, 20, false)
+			res, _, err := wf.GetPage(200, 1, false)
 			if err == nil {
 				result.WorkflowSet = res
 			}
@@ -84,7 +84,7 @@ func (w *WorkflowsWorkflowtype) GetPage(pageSize int, pageIndex int) (results []
 		table.Count(&count)
 		for i := range results {
 			wf := &WorkflowsWorkflow{}
-			res, _, err := wf.GetPage(1, 20, false)
+			res, _, err := wf.GetPage(200, 1, false)
 			if err == nil {
 				results[i].WorkflowSet = res
 			}
