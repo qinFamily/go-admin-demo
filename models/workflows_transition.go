@@ -38,6 +38,8 @@ func (WorkflowsTransition) TableName() string {
 
 func (w *WorkflowsTransition) Create() (WorkflowsTransition, error) {
 	var doc WorkflowsTransition
+	w.CreateTime = time.Now()
+	w.UpdateTime = w.CreateTime
 	result := orm.Eloquent.Table(w.TableName()).Create(&w)
 	if result.Error != nil {
 		err := result.Error
@@ -57,6 +59,10 @@ func (w *WorkflowsTransition) Get(isRelated bool) (result WorkflowsTransition, e
 		if w.ID != 0 {
 			table = table.Where("id = ?", w.ID)
 		}
+		if w.SourceStateID != 0 {
+			table = table.Where("source_state_id = ?", w.SourceStateID)
+		}
+
 		if err = table.First(&result).Error; err != nil {
 			return result, err
 		}
@@ -95,6 +101,9 @@ func (w *WorkflowsTransition) GetPage(pageSize int, pageIndex int, isRelated boo
 		table := orm.Eloquent.Select("*").Table(w.TableName())
 		if w.WorkflowID != 0 {
 			table = table.Where("workflow_id = ?", w.WorkflowID)
+		}
+		if w.SourceStateID != 0 {
+			table = table.Where("source_state_id = ?", w.SourceStateID)
 		}
 
 		// 数据权限控制(如果不需要数据权限请将此处去掉)

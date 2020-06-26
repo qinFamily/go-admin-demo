@@ -170,6 +170,10 @@ func GetSysUserWorkflow(c *gin.Context) {
 
 	data.DataScope = tools.GetUserIdStr(c)
 	result, _, err := data.GetPage(pageSize, pageIndex)
+	for i := range result {
+		// 密码不外放
+		result[i].Password = ""
+	}
 	tools.HasError(err, "", -1)
 
 	app.ResultOK(c, result, "")

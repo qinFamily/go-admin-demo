@@ -23,6 +23,9 @@ func GetTicketsTicketflowlogList(c *gin.Context) {
 		pageIndex = tools.StrToInt(err, index)
 	}
 
+	// 如果传了ticket 取当前
+	data.TicketId, _ = tools.StringToInt(c.Request.FormValue("ticket"))
+
 	data.DataScope = tools.GetUserIdStr(c)
 	result, count, err := data.GetPage(pageSize, pageIndex)
 	tools.HasError(err, "", -1)

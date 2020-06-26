@@ -14,7 +14,7 @@ type WorkflowsCustomfield struct {
 	UpdateTime          time.Time `gorm:"column:update_time;type:datetime;not null" json:"update_time"`
 	Memo                string    `gorm:"column:memo;type:text;not null" json:"memo"`
 	FieldAttribute      bool      `gorm:"column:field_attribute;type:tinyint(4);not null" json:"field_attribute"`
-	FieldType           int    `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
+	FieldType           int       `gorm:"column:field_type;type:varchar(1);not null" json:"field_type"`
 	FieldKey            string    `gorm:"column:field_key;type:varchar(50);not null" json:"field_key"`
 	FieldName           string    `gorm:"column:field_name;type:varchar(50);not null" json:"field_name"`
 	OrderID             int       `gorm:"column:order_id;type:int(11);not null" json:"order_id"`
@@ -37,6 +37,8 @@ func (WorkflowsCustomfield) TableName() string {
 
 func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
 	var doc WorkflowsCustomfield
+	w.CreateTime = time.Now()
+	w.UpdateTime = w.CreateTime
 	result := orm.Eloquent.Table(w.TableName()).Create(&w)
 	if result.Error != nil {
 		err := result.Error
@@ -49,7 +51,7 @@ func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
 // Get 获取
 func (w *WorkflowsCustomfield) Get(isRelated bool) (result WorkflowsCustomfield, err error) {
 
-	key := fmt.Sprintf("wfc:get:%+v:%d", isRelated, w.ID)
+	key := fmt.Sprintf("wfc:get:%+v:%d:%d", isRelated, w.ID, w.WorkflowID)
 	getter := func() (interface{}, error) {
 
 		table := orm.Eloquent.Table(w.TableName()).Order("order_id")

@@ -5,6 +5,7 @@ import (
 	"go-admin-demo/tools"
 	"go-admin-demo/tools/app"
 	"go-admin-demo/tools/app/msg"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -32,9 +33,10 @@ func GetTicketsTicketList(c *gin.Context) {
 
 		app.PageOK(c, result, count, pageIndex, pageSize, "")
 	} else {
+		data.DataScope = tools.GetUserIdStr(c)
 		data.Id, err = tools.StringToInt(id)
 		tools.HasError(err, "抱歉id错误", -1)
-		result, err := data.Get()
+		result, err := data.Get(true)
 		tools.HasError(err, "抱歉未找到相关信息", -1)
 
 		app.OK(c, result, "")
@@ -44,7 +46,7 @@ func GetTicketsTicketList(c *gin.Context) {
 func GetTicketsTicket(c *gin.Context) {
 	var data models.TicketsTicket
 	data.Id, _ = tools.StringToInt(c.Param("id"))
-	result, err := data.Get()
+	result, err := data.Get(true)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	app.OK(c, result, "")
@@ -53,9 +55,34 @@ func GetTicketsTicket(c *gin.Context) {
 func InsertTicketsTicket(c *gin.Context) {
 	var data models.TicketsTicket
 	err := c.ShouldBindJSON(&data)
-	data.CreateBy = tools.GetUserId(c)
 	tools.HasError(err, "", 500)
+	data.CreateBy = tools.GetUserId(c)
 	result, err := data.Create()
+	// 写 customefield
+	customFileds := make([]models.TicketsTicketcustomfield, 0)
+	if len(data.Customfield) > 0 {
+		err = binding.JSON.BindBody([]byte(data.Customfield), customFileds)
+		if err == nil {
+			for _, cf := range customFileds {
+				cf.TicketId = data.Id
+				_, err = cf.Create()
+				if err != nil {
+					log.Println("ERROR!!!!!!!!!!!!!!!!!!!!!", err)
+					tools.HasError(err, "", -1)
+				}
+			}
+		} else {
+			log.Println("bind customFileds ERROR!!!!!!!!!!!!!!!!!!!!!", err, data.Customfield)
+		}
+	}
+	// 写 log
+	// 写 user
+	ttu := models.TicketsTicketuser{
+		TicketId: data.Id,
+		Username: tools.GetUserName(c),
+	}
+	_, err = ttu.Create()
+	log.Println("create TicketsTicketuser ERROR!!!!!!!!!!!!!!!!!!!!!", err)
 	tools.HasError(err, "", -1)
 	app.OK(c, result, "")
 }
@@ -63,12 +90,15 @@ func InsertTicketsTicket(c *gin.Context) {
 func UpdateTicketsTicket(c *gin.Context) {
 	var data models.TicketsTicket
 	err := c.BindWith(&data, binding.JSON)
-	tools.HasError(err, "数据解析失败", -1)
+	tools.HasError(err, "更新数据，数据解析失败", -1)
 	// data.UpdateBy = tools.GetUserIdStr(c)
-	result, err := data.Update(data.Id)
-	tools.HasError(err, "", -1)
+	IDS := tools.IdsStrToIdsIntGroup("flowId", c)
+	if len(IDS) > 0 {
+		data, err = data.Update(IDS[0])
+		tools.HasError(err, "", -1)
+	}
 
-	app.OK(c, result, "")
+	app.OK(c, data, "")
 }
 
 func DeleteTicketsTicket(c *gin.Context) {

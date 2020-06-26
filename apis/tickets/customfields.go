@@ -10,9 +10,13 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
+// http://127.0.0.1:8000/api/v1/ticket/ticketcustomfield/?is_hidden=false&ticket=3&workflow=1&source_state=4
 func GetTicketsTicketcustomfieldList(c *gin.Context) {
 	var data models.TicketsTicketcustomfield
 	var err error
+	// 如果传了ticket 取当前
+	data.TicketId, _ = tools.StringToInt(c.Request.FormValue("ticket"))
+	// log.Println("============= TicketId", data.TicketId)
 	var pageSize = 10
 	var pageIndex = 1
 
@@ -28,6 +32,7 @@ func GetTicketsTicketcustomfieldList(c *gin.Context) {
 	tools.HasError(err, "", -1)
 
 	app.PageOK(c, result, count, pageIndex, pageSize, "")
+
 }
 
 func GetTicketsTicketcustomfield(c *gin.Context) {

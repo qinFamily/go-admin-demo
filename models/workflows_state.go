@@ -37,6 +37,8 @@ func (WorkflowsState) TableName() string {
 
 func (w *WorkflowsState) Create() (WorkflowsState, error) {
 	var doc WorkflowsState
+	w.CreateTime = time.Now()
+	w.UpdateTime = w.CreateTime
 	result := orm.Eloquent.Table(w.TableName()).Create(&w)
 	if result.Error != nil {
 		err := result.Error
@@ -176,7 +178,7 @@ func (w *WorkflowsState) Get(isRelated bool, depth int) (result WorkflowsState, 
 }
 
 // Gets 获取批量结果
-func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool, depth int) (results []WorkflowsState, count int, err error) {
+func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool, depth int, checkHiden bool) (results []WorkflowsState, count int, err error) {
 
 	key := fmt.Sprintf("wfs:getp:%d:%d:%+v:%d:%d", pageSize, pageIndex, isRelated, depth, w.WorkflowID)
 
@@ -185,7 +187,13 @@ func (w *WorkflowsState) GetPage(pageSize int, pageIndex int, isRelated bool, de
 		if w.WorkflowID != 0 {
 			table = table.Where("workflow_id = ?", w.WorkflowID)
 		}
-
+		if checkHiden {
+			ish := 0
+			if w.IsHidden {
+				ish = 1
+			}
+			table = table.Where("is_hidden = ?", ish)
+		}
 		// 数据权限控制(如果不需要数据权限请将此处去掉)
 		//dataPermission := new(DataPermission)
 		//dataPermission.UserId, _ = tools.StringToInt(e.DataScope)

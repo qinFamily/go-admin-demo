@@ -71,8 +71,8 @@ func (l *lruCache) GetWithLoader(key string, load GetterFunc) (interface{}, erro
 			now := time.Now()
 			data, err := load()
 			elasped := time.Since(now)
-			if elasped > 200*time.Millisecond {
-				log.Println(fmt.Sprintf(`{"ts":"%s","msg":"lru get spend too long","query":"%s", "lruResponseTime":%+v}`,time.Now().Local().Format(time.RFC1123), key, elasped.String()))
+			if elasped > 10*time.Second {
+				log.Println(fmt.Sprintf(`{"ts":"%s","msg":"lru get spend too long","query":"%s", "lruResponseTime":%+v}`, time.Now().Local().Format(time.RFC1123), key, elasped.String()))
 			}
 			// metrics.LruLoadLatency.Observe(elasped.Seconds())
 			if err != nil {

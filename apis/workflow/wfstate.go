@@ -30,9 +30,15 @@ func GetWorkFlowState(c *gin.Context) {
 		workflowID = tools.StrToInt(err, id)
 	}
 	data.WorkflowID = workflowID
-
+	// /api/workflow/state/?is_hidden=false&workflow=1
+	isHidden := c.Request.FormValue("is_hidden")
+	checkHiden := false
+	if len(isHidden) > 0 {
+		data.IsHidden = isHidden == "true"
+		checkHiden = true
+	}
 	data.DataScope = tools.GetUserIdStr(c)
-	result, count, err := data.GetPage(pageSize, pageIndex, false, 1)
+	result, count, err := data.GetPage(pageSize, pageIndex, false, 1, checkHiden)
 	tools.HasError(err, "抱歉未找到相关信息", -1)
 
 	res := &app.WorkFlowResponse{

@@ -176,7 +176,7 @@ func InitRouter() *gin.Engine {
 		auth.GET("/workflow/customfield/", workflow.GetWorkFlowCustomField)
 		auth.GET("/workflow/state/", workflow.GetWorkFlowState)
 		auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
-		auth.PUT("/workflow/wfconf/:confId", workflow.UpdateWorkFlow)
+		auth.PUT("/workflow/wfconf/:flowId", workflow.UpdateWorkFlow)
 		// auth.PUT("", workflow.UpdateWorkFlow)
 		auth.GET("/sys/user/", system.GetSysUserWorkflow)
 		auth.GET("/role/", system.GetRoleInit)

@@ -4,26 +4,22 @@ import (
 	"fmt"
 	"go-admin-demo/cache"
 	orm "go-admin-demo/database"
-	"go-admin-demo/tools"
-	_ "time"
+	"time"
 )
 
 type TicketsTicketuser struct {
-	Id         int    `json:"id" gorm:"type:bigint(20);primary_key"` // 主键
-	CreateTime string `json:"createTime" gorm:"type:timestamp;"`     // 创建时间
-	UpdateTime string `json:"updateTime" gorm:"type:timestamp;"`     // 更新时间
-	Memo       string `json:"memo" gorm:"type:text;"`                // 备注
-	Username   string `json:"username" gorm:"type:varchar(100);"`    // 关系人
-	InProcess  int    `json:"inProcess" gorm:"type:tinyint(1);"`     // 待处理中
-	Worked     int    `json:"worked" gorm:"type:tinyint(1);"`        // 处理过
-	CreatedAt  string `json:"createdAt" gorm:"type:timestamp;"`      // 创建时间
-	UpdatedAt  string `json:"updatedAt" gorm:"type:timestamp;"`      // 更新时间
-	DeletedAt  string `json:"deletedAt" gorm:"type:timestamp;"`      // 删除时间
-	TicketId   int    `json:"ticketId" gorm:"type:bigint(20);"`      // 工单
-	CreateBy   string `json:"createBy" gorm:"-"`                     // 创建者
-	UpdateBy   string `json:"updateBy" gorm:"-"`                     // 修改者
-	DataScope  string `json:"dataScope" gorm:"-"`
-	Params     string `json:"params"  gorm:"-"`
+	Id         int       `json:"id" gorm:"type:bigint(20);primary_key"` // 主键
+	CreateTime time.Time `json:"create_time" gorm:"type:timestamp;"`    // 创建时间
+	UpdateTime time.Time `json:"update_time" gorm:"type:timestamp;"`    // 更新时间
+	Memo       string    `json:"memo" gorm:"type:text;"`                // 备注
+	Username   string    `json:"username" gorm:"type:varchar(100);"`    // 关系人
+	InProcess  int       `json:"in_process" gorm:"type:tinyint(1);"`    // 待处理中
+	Worked     int       `json:"worked" gorm:"type:tinyint(1);"`        // 处理过
+	TicketId   int       `json:"ticket_id" gorm:"type:bigint(20);"`     // 工单
+	CreateBy   string    `json:"createBy" gorm:"-"`                     // 创建者
+	UpdateBy   string    `json:"updateBy" gorm:"-"`                     // 修改者
+	DataScope  string    `json:"dataScope" gorm:"-"`
+	Params     string    `json:"params"  gorm:"-"`
 	BaseModel
 }
 
@@ -34,6 +30,8 @@ func (TicketsTicketuser) TableName() string {
 // 创建TicketsTicketuser
 func (e *TicketsTicketuser) Create() (TicketsTicketuser, error) {
 	var doc TicketsTicketuser
+	e.CreateTime = time.Now()
+	e.UpdateTime = e.CreateTime
 	result := orm.Eloquent.Table(e.TableName()).Create(&e)
 	if result.Error != nil {
 		err := result.Error
@@ -67,11 +65,14 @@ func (e *TicketsTicketuser) GetPage(pageSize int, pageIndex int) (doc []TicketsT
 	key := fmt.Sprintf("ttu:getp:%s:%s", e.Username, e.DataScope)
 	getter := func() (interface{}, error) {
 		table := orm.Eloquent.Select("*").Table(e.TableName())
+		if e.TicketId > 0 {
+			table = table.Where("ticket_id = ?", e.TicketId)
+		}
 
 		// 数据权限控制(如果不需要数据权限请将此处去掉)
-		dataPermission := new(DataPermission)
-		dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
-		table = dataPermission.GetDataScope(e.TableName(), table)
+		// dataPermission := new(DataPermission)
+		// dataPermission.UserId, _ = tools.StringToInt(e.DataScope)
+		// table = dataPermission.GetDataScope(e.TableName(), table)
 
 		if err = table.Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&doc).Error; err != nil {
 			return nil, err

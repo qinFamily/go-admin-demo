@@ -1,10 +1,11 @@
 package system
 
 import (
-	"github.com/gin-gonic/gin"
 	"go-admin-demo/models"
 	"go-admin-demo/tools"
 	"go-admin-demo/tools/app"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetInfo(c *gin.Context) {
@@ -43,5 +44,6 @@ func GetInfo(c *gin.Context) {
 	}
 	mp["name"] = user.NickName
 	mp["ip"] = c.ClientIP()
-	app.OK(c,mp,"")
+	mp["userId"] = user.UserId
+	app.OK(c, mp, "")
 }
