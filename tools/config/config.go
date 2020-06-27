@@ -2,17 +2,19 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 var cfgDatabase *viper.Viper
 var cfgApplication *viper.Viper
 var cfgJwt *viper.Viper
 var cfgLog *viper.Viper
+var cfgRedis *viper.Viper
 
 //func init() {
 //	InitConfig("settings.dev")
@@ -25,7 +27,6 @@ func ConfigSetup(path string) {
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Read config file fail: %s", err.Error()))
 	}
-
 
 	//Replace environment variables
 	err = viper.ReadConfig(strings.NewReader(os.ExpandEnv(string(content))))
@@ -56,6 +57,14 @@ func ConfigSetup(path string) {
 		panic("config not found settings.log")
 	}
 	LogConfig = InitLog(cfgLog)
+
+	// 加载缓存配置
+	cfgRedis = viper.Sub("settings.cache")
+	if cfgRedis == nil {
+		panic("config not found settings.cache")
+	}
+	RedisConfig = InitRedis(cfgRedis)
+
 }
 
 func SetApplicationIsInit() {

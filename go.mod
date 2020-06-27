@@ -5,41 +5,33 @@ go 1.12
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/casbin/casbin/v2 v2.2.1
-	github.com/casbin/gorm-adapter/v2 v2.0.3
+	github.com/casbin/casbin/v2 v2.7.2
+	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/gin-gonic/gin v1.4.0
-	github.com/go-kit/kit v0.8.0
+	github.com/gin-gonic/gin v1.6.3
+	github.com/go-kit/kit v0.10.0
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/go-openapi/spec v0.19.7 // indirect
-	github.com/go-openapi/swag v0.19.8 // indirect
+	github.com/go-openapi/spec v0.19.8 // indirect
+	github.com/go-openapi/swag v0.19.9 // indirect
 	github.com/go-redis/redis v6.15.8+incompatible
-	github.com/go-sql-driver/mysql v1.4.1
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
-	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/hnlq715/golang-lru v0.2.0
-	github.com/jinzhu/gorm v1.9.10
-	github.com/json-iterator/go v1.1.8 // indirect
+	github.com/jinzhu/gorm v1.9.14
 	github.com/mailru/easyjson v0.7.1 // indirect
-	github.com/mattn/go-isatty v0.0.10 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mojocn/base64Captcha v1.3.1
-	github.com/mssola/user_agent v0.5.1
-	github.com/robfig/cron/v3 v3.0.0
+	github.com/mssola/user_agent v0.5.2
+	github.com/mumushuiding/util v0.0.0-20200601084908-a10253e98c40
+	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/shirou/gopsutil v2.20.3+incompatible
-	github.com/sirupsen/logrus v1.2.0
+	github.com/shirou/gopsutil v2.20.5+incompatible
+	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.6.2
+	github.com/spf13/viper v1.7.0
 	github.com/swaggo/gin-swagger v1.2.0
-	github.com/swaggo/swag v1.6.5
-	github.com/ugorji/go v1.1.7 // indirect
+	github.com/swaggo/swag v1.6.7
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/tools v0.0.0-20200402223321-bcf690261a44 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 )

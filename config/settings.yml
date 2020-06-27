@@ -1,6 +1,6 @@
 settings:
   application:
-    mode: dev  # dev开发环境 test测试环境 prod线上环境
+    mode: prod  # dev开发环境 test测试环境 prod线上环境
     demomsg: "谢谢您的参与，但为了大家更好的体验，所以本次提交就算了吧！\U0001F600\U0001F600\U0001F600"
     host: 0.0.0.0
     name: testApp
@@ -19,3 +19,13 @@ settings:
     password: 
     port: 3306
     username: root
+  cache:
+    RedisType: ring      ## ring - 单实例主从  cluster - 集群  sentinel - 哨兵
+    RedisPath: 127.0.0.1:6379
+    RedisDialTimeout: 2s
+    RedisReadTimeout: 2s
+    RedisWriteTimeout: 2s
+    RedisPoolSize: 1000
+    Expire: 5m
+    RedisPassword:
+    RedisDatabase: 1

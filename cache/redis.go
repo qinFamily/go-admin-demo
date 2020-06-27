@@ -3,10 +3,10 @@ package cache
 import (
 	"context"
 	"fmt"
+	"go-admin-demo/tools/config"
+	"log"
 	"strings"
 	"time"
-	"log"
-	"go-admin-demo/tools/config"
 
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
@@ -22,7 +22,7 @@ type redisCache struct {
 var Redis redisCache
 
 const (
-	redisCluster  = "cluster"
+	RedisCluster  = "cluster"
 	redisRing     = "ring"
 	redisSentinel = "sentinel"
 )
@@ -34,7 +34,7 @@ func maxlen(data []byte, length int) string {
 	return string(data)
 }
 
-func Init(r *config.RedisConf) error {
+func SetRedis(r *config.RedisConf) error {
 	var err error
 
 	if r.RedisType == redisRing {
@@ -56,7 +56,7 @@ func Init(r *config.RedisConf) error {
 		})
 
 		err = Redis.ring.Ping().Err()
-	} else if r.RedisType == redisCluster {
+	} else if r.RedisType == RedisCluster {
 		serverList := strings.Split(r.RedisPath, ",")
 		Redis.cluster = redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:        serverList,
@@ -137,7 +137,6 @@ func (c *redisCache) Set(ctx context.Context, key string, val string, expiration
 	} else if c.sentinel != nil {
 		err = c.sentinel.Set(key, val, expiration).Err()
 	}
-
 
 	if err != nil && err != redis.Nil {
 		log.Println("redisCache Set")

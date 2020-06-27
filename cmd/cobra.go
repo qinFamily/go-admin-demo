@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"go-admin-demo/cmd/api"
+	"go-admin-demo/cmd/crond"
 	"go-admin-demo/cmd/migrate"
 	"log"
 	"os"
@@ -32,6 +33,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(api.StartCmd)
 	rootCmd.AddCommand(migrate.StartCmd)
+	rootCmd.AddCommand(crond.StartCmd)
 }
 
 //Execute : apply commands

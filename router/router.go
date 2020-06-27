@@ -14,6 +14,7 @@ import (
 	"go-admin-demo/handler/sd"
 	"go-admin-demo/middleware"
 	_ "go-admin-demo/pkg/jwtauth"
+	controller "go-admin-demo/workflow-controller"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -190,6 +191,40 @@ func InitRouter() *gin.Engine {
 		auth.GET("/ticket/ticketflowlog/", tickets.GetTicketsTicketflowlogList)
 		auth.GET("/ticket/ticketcustomfield/", tickets.GetTicketsTicketcustomfieldList)
 		auth.GET("/ticket/ticketuser/", tickets.GetTicketsTicketuserList)
+
+		// 钉钉样式的工作流
+
+		auth.GET("/workflow/", controller.Index)
+		//-------------------------流程定义----------------------
+		auth.POST("/workflow/procdef/save", controller.SaveProcdef)
+		auth.POST("/workflow/procdef/saveByToken", controller.SaveProcdefByToken)
+		auth.GET("/workflow/procdef/findAll", controller.FindAllProcdefPage)
+		auth.GET("/workflow/procdef/delById", controller.DelProcdefByID)
+		// -----------------------流程实例-----------------------
+		auth.POST("/workflow/process/start", controller.StartProcessInstance)               // 启动流程
+		auth.POST("/workflow/process/startByToken", controller.StartProcessInstanceByToken) // 启动流程
+		auth.POST("/workflow/process/findTask", controller.FindMyProcInstPageAsJSON)        // 查询需要我审批的流程
+		auth.POST("/workflow/process/findById", controller.FindProcInstByID)                // 根据id查询流程实例
+		auth.POST("/workflow/process/findTaskByToken", controller.FindMyProcInstByToken)
+		auth.POST("/workflow/process/startByMyself", controller.StartByMyself)   // 查询我启动的流程
+		auth.POST("/workflow/process/FindProcNotify", controller.FindProcNotify) // 查询抄送我的流程
+		// auth.GET("/workflow/process/moveToHistory", controller.MoveFinishedProcInstToHistory)
+		// -----------------------任务--------------------------
+		auth.POST("/workflow/task/complete", controller.CompleteTask)
+		auth.POST("/workflow/task/completeByToken", controller.CompleteTaskByToken)
+		auth.POST("/workflow/task/withdraw", controller.WithDrawTask)
+		auth.POST("/workflow/task/withdrawByToken", controller.WithDrawTaskByToken)
+		// ----------------------- 关系表 -------------------------
+		auth.GET("/workflow/identitylink/findParticipant", controller.FindParticipantByProcInstID)
+
+		// ******************************** 历史纪录 ***********************************
+		// -------------------------- 流程实例 -------------------------------
+		auth.POST("/workflow/procHistory/findTask", controller.FindProcHistory)
+		auth.POST("/workflow/procHistory/findTaskByToken", controller.FindProcHistoryByToken)
+		auth.POST("/workflow/procHistory/startByMyself", controller.StartHistoryByMyself)   // 查询我启动的流程
+		auth.POST("/workflow/procHistory/FindProcNotify", controller.FindProcHistoryNotify) // 查询抄送我的流程
+		// ----------------------- 关系表 -------------------------
+		auth.GET("/workflow/identitylinkHistory/findParticipant", controller.FindParticipantHistoryByProcInstID)
 
 	}
 	//r.NoRoute(authMiddleware.MiddlewareFunc(), NoFound)
