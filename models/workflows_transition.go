@@ -46,7 +46,31 @@ func (w *WorkflowsTransition) Create() (WorkflowsTransition, error) {
 		return doc, err
 	}
 	doc = *w
+	
+	// 删除缓存
+	w.deleteKeys()
+
 	return doc, nil
+}
+
+func (doc *WorkflowsTransition) deleteKeys() {
+
+	// 删除缓存
+	wfwKeyTrue := fmt.Sprintf("wft:get:%+v:%d", true, doc.ID)
+	cache.LRU().Del(wfwKeyTrue)
+	wfwKeyFalse := fmt.Sprintf("wft:get:%+v:%d", false, doc.ID)
+	cache.LRU().Del(wfwKeyFalse)
+
+	for i := 1; i < 11; i++ {
+		for depth := 1; depth < 4; depth++ {
+			wfwgetpKeyTrue := fmt.Sprintf("wft:getp:%d:%d:%+v:%d:%d", 20, i, true, depth, doc.WorkflowID)
+			cache.LRU().Del(wfwgetpKeyTrue)
+
+			wfwgetpKeyFalse := fmt.Sprintf("wft:getp:%d:%d:%+v:%d:%d", 20, i, false, depth, doc.WorkflowID)
+			cache.LRU().Del(wfwgetpKeyFalse)
+		}
+	}
+
 }
 
 // Get 获取
@@ -155,6 +179,10 @@ func (e *WorkflowsTransition) Update(id int) (update WorkflowsTransition, err er
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	
+	// 删除缓存
+	e.deleteKeys()
+	
 	return
 }
 
@@ -165,6 +193,9 @@ func (e *WorkflowsTransition) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	
+	// 删除缓存
+	e.deleteKeys()
 	return
 }
 

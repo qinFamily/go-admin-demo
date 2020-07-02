@@ -68,6 +68,15 @@ func UpdateWorkFlowTransition(c *gin.Context) {
 	// c.JSON(http.StatusOK, res.ReturnOK())
 }
 
+func InsertWorkFlowTransition(c *gin.Context) {
+	var data models.WorkflowsTransition
+	err := c.ShouldBindJSON(&data)
+	tools.HasError(err, "", 500)
+	result, err := data.Create()
+	tools.HasError(err, "", -1)
+	app.OK(c, result, "")
+}
+
 func DeleteWorkflowsWorkFlowTransition(c *gin.Context) {
 	var data models.WorkflowsTransition
 	IDS := tools.IdsStrToIdsIntGroup("flowtypeId", c)

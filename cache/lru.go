@@ -59,8 +59,11 @@ func (l *lruCache) Get(key string) (interface{}, error) {
 	if !ok {
 		return nil, Nil
 	}
-
 	return data, nil
+}
+
+func (l *lruCache) Del(key string) {
+	l.arc.Remove(key)
 }
 
 func (l *lruCache) GetWithLoader(key string, load GetterFunc) (interface{}, error) {

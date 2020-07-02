@@ -62,6 +62,15 @@ func UpdateWorkFlowCustomField(c *gin.Context) {
 	// c.JSON(http.StatusOK, res.ReturnOK())
 }
 
+func InsertWorkFlowCustomField(c *gin.Context) {
+	var data models.WorkflowsCustomfield
+	err := c.ShouldBindJSON(&data)
+	tools.HasError(err, "", 500)
+	result, err := data.Create()
+	tools.HasError(err, "", -1)
+	app.OK(c, result, "")
+}
+
 func DeleteWorkflowsWorkFlowCustomField(c *gin.Context) {
 	var data models.WorkflowsCustomfield
 	IDS := tools.IdsStrToIdsIntGroup("flowtypeId", c)

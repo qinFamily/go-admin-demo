@@ -30,6 +30,17 @@ func (WorkflowsWorkflowtype) TableName() string {
 	return "workflows_workflowtype"
 }
 
+// 删除缓存
+func (w *WorkflowsWorkflowtype) deleteKeys() {
+	
+	keyGet := fmt.Sprintf("wfwt:get:%d", w.ID)
+	cache.LRU().Del(keyGet)
+	for i := 1; i < 11; i++ {
+		keyGetp := fmt.Sprintf("wfwt:getp:20:%d", i)
+		cache.LRU().Del(keyGetp)
+	}
+}
+
 func (w *WorkflowsWorkflowtype) Create() (wt WorkflowsWorkflowtype, err error) {
 
 	result := orm.Eloquent.Table(w.TableName()).Create(&w)
@@ -37,26 +48,10 @@ func (w *WorkflowsWorkflowtype) Create() (wt WorkflowsWorkflowtype, err error) {
 		err = result.Error
 	}
 	wt = *w
-	// 更新缓存【笑哭】
-	wfwtKey := fmt.Sprintf("wfwt:get:%d", w.ID)
-	if _, err1 := cache.LRU().Get(wfwtKey); err1 == nil {
-		cache.LRU().Set(wfwtKey, wt)
-	}
-	wfwtgetpKey := fmt.Sprintf("wfwt:getp:%d:%d", 20, 1)
-	if results, err2 := cache.LRU().Get(wfwtgetpKey); err2 == nil {
 
-		if ars, ok := results.([]WorkflowtypeWorkflowsSet); ok {
-			wf := &WorkflowsWorkflow{
-				TypeID: wt.ID,
-			}
-			res, _, err := wf.GetPage(200, 1, false)
-			if err == nil {
-				ars = append(ars, WorkflowtypeWorkflowsSet{&wt, res})
-				cache.LRU().Set(wfwtgetpKey, ars)
-			}
-		}
+	// 删除缓存【笑哭】
+	w.deleteKeys()
 
-	}
 	return
 }
 
@@ -137,6 +132,9 @@ func (e *WorkflowsWorkflowtype) Update(id int) (update WorkflowsWorkflowtype, er
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	// 删除缓存【笑哭】
+	e.deleteKeys()
+
 	return
 }
 
@@ -147,6 +145,9 @@ func (e *WorkflowsWorkflowtype) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	// 删除缓存【笑哭】
+	e.deleteKeys()
+
 	return
 }
 

@@ -32,6 +32,19 @@ func (TicketsTicketcustomfield) TableName() string {
 	return "tickets_ticketcustomfield"
 }
 
+func (e *TicketsTicketcustomfield) deleteKeys() {
+
+	// 删除缓存
+	wfwKeyTrue := fmt.Sprintf("ttcf:get:%s:%s", e.CreateBy, e.DataScope)
+	cache.LRU().Del(wfwKeyTrue)
+
+	for i := 0; i < 10; i++ {
+		wfwgetpKeyTrue := fmt.Sprintf("ttcf:getp:%d:%d:%s:%s", 20, i, e.CreateBy, e.DataScope)
+		cache.LRU().Del(wfwgetpKeyTrue)
+	}
+
+}
+
 // 创建TicketsTicketcustomfield
 func (e *TicketsTicketcustomfield) Create() (TicketsTicketcustomfield, error) {
 	var doc TicketsTicketcustomfield
@@ -43,6 +56,9 @@ func (e *TicketsTicketcustomfield) Create() (TicketsTicketcustomfield, error) {
 		return doc, err
 	}
 	doc = *e
+	// 删除缓存
+	e.deleteKeys()
+
 	return doc, nil
 }
 
@@ -99,7 +115,7 @@ func (e *TicketsTicketcustomfield) Get() (doc TicketsTicketcustomfield, err erro
 // 获取TicketsTicketcustomfield带分页
 func (e *TicketsTicketcustomfield) GetPage(pageSize int, pageIndex int) (doc []TicketsTicketcustomfield, count int, err error) {
 
-	key := fmt.Sprintf("ttcf:getp:%s:%s", e.CreateBy, e.DataScope)
+	key := fmt.Sprintf("ttcf:getp:%d:%d:%s:%s",pageSize, pageIndex, e.CreateBy, e.DataScope)
 	getter := func() (interface{}, error) {
 		table := orm.Eloquent.Select("*").Table(e.TableName())
 		if e.TicketId > 0 {
@@ -173,6 +189,9 @@ func (e *TicketsTicketcustomfield) Update(id int) (update TicketsTicketcustomfie
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	// 删除缓存
+	e.deleteKeys()
+
 	return
 }
 
@@ -183,6 +202,8 @@ func (e *TicketsTicketcustomfield) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	// 删除缓存
+	e.deleteKeys()
 	return
 }
 

@@ -28,6 +28,25 @@ type WorkflowsWorkflow struct {
 func (WorkflowsWorkflow) TableName() string {
 	return "workflows_workflow"
 }
+
+// 删除缓存
+func (w *WorkflowsWorkflow) deleteKeys(){
+
+	wfwKeyTrue := fmt.Sprintf("wfw:get:%+v:%d", true, w.ID)
+	cache.LRU().Del(wfwKeyTrue)
+	
+	wfwKeyFalse := fmt.Sprintf("wfw:get:%+v:%d", false, w.ID)
+	cache.LRU().Del(wfwKeyFalse)
+
+	for i := 1; i < 11; i++ {
+		wfwgetpKeyTrue := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, i, true, w.TypeID)
+		cache.LRU().Del(wfwgetpKeyTrue)
+		wfwgetpKeyFalse := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, i, false, w.TypeID)
+		cache.LRU().Del(wfwgetpKeyFalse)
+	}
+	
+}
+
 func (w *WorkflowsWorkflow) Create() (WorkflowsWorkflow, error) {
 	var doc WorkflowsWorkflow
 	if w.TypeID == 0 {
@@ -41,46 +60,9 @@ func (w *WorkflowsWorkflow) Create() (WorkflowsWorkflow, error) {
 		return doc, err
 	}
 	doc = *w
-	// 更新缓存
-	wfwKeyTrue := fmt.Sprintf("wfw:get:%+v:%d", true, doc.ID)
-	if _, err1 := cache.LRU().Get(wfwKeyTrue); err1 == nil {
 
-		info := &WorkflowsWorkflowtype{
-			ID: doc.TypeID,
-		}
-		if wt, err := info.Get(); err == nil {
-			doc.WorkflowsWorkflowtype = wt
-		}
-
-		cache.LRU().Set(wfwKeyTrue, doc)
-	}
-	wfwKeyFalse := fmt.Sprintf("wfw:get:%+v:%d", false, doc.ID)
-	if _, err1 := cache.LRU().Get(wfwKeyFalse); err1 == nil {
-		cache.LRU().Set(wfwKeyFalse, doc)
-	}
-
-	wfwgetpKeyTrue := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, 1, true, doc.TypeID)
-	if result, err1 := cache.LRU().Get(wfwgetpKeyTrue); err1 == nil {
-		if resultA, ok := result.([]WorkflowsWorkflow); ok {
-			info := &WorkflowsWorkflowtype{
-				ID: doc.TypeID,
-			}
-			if wt, err := info.Get(); err == nil {
-				doc.WorkflowsWorkflowtype = wt
-			}
-			resultA = append(resultA, doc)
-			cache.LRU().Set(wfwgetpKeyTrue, resultA)
-		}
-
-	}
-
-	wfwgetpKeyFalse := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, 1, false, doc.TypeID)
-	if result, err1 := cache.LRU().Get(wfwgetpKeyFalse); err1 == nil {
-		if resultA, ok := result.([]WorkflowsWorkflow); ok {
-			resultA = append(resultA, doc)
-			cache.LRU().Set(wfwgetpKeyFalse, resultA)
-		}
-	}
+	// 删除缓存
+	w.deleteKeys()
 
 	return doc, nil
 }
@@ -175,6 +157,9 @@ func (e *WorkflowsWorkflow) Update(id int) (update WorkflowsWorkflow, err error)
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	// 删除缓存
+	e.deleteKeys()
+
 	return
 }
 
@@ -185,6 +170,9 @@ func (e *WorkflowsWorkflow) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	// 删除缓存
+	e.deleteKeys()
+	
 	return
 }
 

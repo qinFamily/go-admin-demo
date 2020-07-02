@@ -45,7 +45,33 @@ func (w *WorkflowsState) Create() (WorkflowsState, error) {
 		return doc, err
 	}
 	doc = *w
+	
+	// 删除缓存
+	w.deleteKeys()
+
 	return doc, nil
+}
+
+func (w *WorkflowsState) deleteKeys() {
+
+	// 删除缓存
+	for depth := 1; depth < 4; depth++ {
+		wfwKeyTrue := fmt.Sprintf("wfs:get:%+v:%d:%d", true, depth, w.ID)
+		cache.LRU().Del(wfwKeyTrue)
+		wfwKeyFalse := fmt.Sprintf("wfs:get:%+v:%d:%d", false, depth, w.ID)
+		cache.LRU().Del(wfwKeyFalse)
+	}
+
+	for i := 0; i < 10; i++ {
+		for depth := 1; depth < 4; depth++ {
+			wfwgetpKeyTrue := fmt.Sprintf("wfs:getp:%d:%d:%+v:%d:%d", 20, i, true, depth, w.WorkflowID)
+			cache.LRU().Del(wfwgetpKeyTrue)
+
+			wfwgetpKeyFalse := fmt.Sprintf("wfs:getp:%d:%d:%+v:%d:%d", 20, i, false, depth, w.WorkflowID)
+			cache.LRU().Del(wfwgetpKeyFalse)
+		}
+	}
+
 }
 
 // Get 获取
@@ -326,6 +352,9 @@ func (e *WorkflowsState) Update(id int) (update WorkflowsState, err error) {
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	// 删除缓存
+	e.deleteKeys()
+	
 	return
 }
 
@@ -336,6 +365,9 @@ func (e *WorkflowsState) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	// 删除缓存
+	e.deleteKeys()
+	
 	return
 }
 

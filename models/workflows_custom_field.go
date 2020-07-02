@@ -35,6 +35,16 @@ func (WorkflowsCustomfield) TableName() string {
 	return "workflows_customfield"
 }
 
+func (w *WorkflowsCustomfield) deleteKeys() {
+	
+	keyGet := fmt.Sprintf("wfc:get:%d:%d", w.ID, w.WorkflowID)
+	cache.LRU().Del(keyGet)
+	for i := 1; i < 11; i++ {
+		keyGetp := fmt.Sprintf("wfc:getp:20:%d:%d", i, w.WorkflowID)
+		cache.LRU().Del(keyGetp)
+	}
+}
+
 func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
 	var doc WorkflowsCustomfield
 	w.CreateTime = time.Now()
@@ -45,13 +55,18 @@ func (w *WorkflowsCustomfield) Create() (WorkflowsCustomfield, error) {
 		return doc, err
 	}
 	doc = *w
+
+	// 删除缓存
+	w.deleteKeys()
+
 	return doc, nil
 }
 
 // Get 获取
 func (w *WorkflowsCustomfield) Get(isRelated bool) (result WorkflowsCustomfield, err error) {
 
-	key := fmt.Sprintf("wfc:get:%+v:%d:%d", isRelated, w.ID, w.WorkflowID)
+	// key := fmt.Sprintf("wfc:get:%+v:%d:%d", isRelated, w.ID, w.WorkflowID)
+	key := fmt.Sprintf("wfc:get:%d:%d", w.ID, w.WorkflowID)
 	getter := func() (interface{}, error) {
 
 		table := orm.Eloquent.Table(w.TableName()).Order("order_id")
@@ -81,8 +96,8 @@ func (w *WorkflowsCustomfield) Get(isRelated bool) (result WorkflowsCustomfield,
 
 // Gets 获取批量结果
 func (w *WorkflowsCustomfield) GetPage(pageSize int, pageIndex int, isRelated bool) (results []WorkflowsCustomfield, count int, err error) {
-	key := fmt.Sprintf("wfc:getp:%d:%d:%+v:%d", pageSize, pageIndex, isRelated, w.WorkflowID)
-
+	// key := fmt.Sprintf("wfc:getp:%d:%d:%+v:%d", pageSize, pageIndex, isRelated, w.WorkflowID)
+	key := fmt.Sprintf("wfc:getp:%d:%d:%d", pageSize, pageIndex, w.WorkflowID)
 	getter := func() (interface{}, error) {
 		table := orm.Eloquent.Select("*").Table(w.TableName()).Order("order_id")
 		if w.WorkflowID != 0 {
@@ -129,6 +144,10 @@ func (e *WorkflowsCustomfield) Update(id int) (update WorkflowsCustomfield, err 
 	if err = orm.Eloquent.Table(e.TableName()).Model(&update).Updates(&e).Error; err != nil {
 		return
 	}
+	
+	// 删除缓存
+	e.deleteKeys()
+
 	return
 }
 
@@ -139,6 +158,9 @@ func (e *WorkflowsCustomfield) Delete(id int) (success bool, err error) {
 		return
 	}
 	success = true
+	// 删除缓存
+	e.deleteKeys()
+
 	return
 }
 

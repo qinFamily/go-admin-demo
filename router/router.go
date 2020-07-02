@@ -177,8 +177,11 @@ func InitRouter() *gin.Engine {
 		auth.DELETE("/workflow/workflowtype/:flowtypeId/", workflow.DeleteWorkflowsWorkflow)
 
 		auth.GET("/workflow/customfield/", workflow.GetWorkFlowCustomField)
+		auth.POST("/workflow/customfield/", workflow.InsertWorkFlowCustomField)
 		auth.GET("/workflow/state/", workflow.GetWorkFlowState)
+		auth.POST("/workflow/state/", workflow.InsertWorkFlowState)
 		auth.GET("/workflow/transition/", workflow.GetWorkFlowTransition)
+		auth.POST("/workflow/transition/", workflow.InsertWorkFlowTransition)
 		auth.PUT("/workflow/wfconf/:flowId", workflow.UpdateWorkFlow)
 		// auth.PUT("", workflow.UpdateWorkFlow)
 		auth.GET("/sys/user/", system.GetSysUserWorkflow)
