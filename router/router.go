@@ -168,8 +168,10 @@ func InitRouter() *gin.Engine {
 
 		auth.GET("/sys/auth/getmenubutons", system.GetMenubButons)
 		auth.GET("/workflow/workflowtype/", workflow.GetWorkFlowType)
+		auth.POST("/workflow/workflowtype/", workflow.InsertWorkFlowType)
 		auth.PUT("/workflow/workflowtype/:flowtypeId/", workflow.UpdateWorkFlowType)
 		auth.GET("/workflow/workflow/", workflow.GetWorkFlow)
+		auth.POST("/workflow/workflow/", workflow.InsertWorkFlow)
 		auth.PUT("/workflow/workflow/:flowId/", workflow.UpdateWorkFlow)
 		auth.DELETE("/workflow/workflow/:flowId/", workflow.DeleteWorkflowsWorkflow)
 		auth.DELETE("/workflow/workflowtype/:flowtypeId/", workflow.DeleteWorkflowsWorkflow)

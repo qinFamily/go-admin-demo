@@ -74,6 +74,15 @@ func UpdateWorkFlowType(c *gin.Context) {
 	// c.JSON(http.StatusOK, res.ReturnOK())
 }
 
+func InsertWorkFlowType(c *gin.Context) {
+	var data models.WorkflowsWorkflowtype
+	err := c.ShouldBindJSON(&data)
+	tools.HasError(err, "", 500) // 数据WorkFlow解析错误
+	result, err := data.Create()
+	tools.HasError(err, "", -1)
+	app.OK(c, result, "")
+}
+
 func DeleteWorkflowsWorkflowType(c *gin.Context) {
 	var data models.WorkflowsWorkflowtype
 	IDS := tools.IdsStrToIdsIntGroup("flowtypeId", c)

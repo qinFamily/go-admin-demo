@@ -31,6 +31,45 @@ func (w *WorkflowsStateUserParticipant) Create() (WorkflowsStateUserParticipant,
 		return doc, err
 	}
 	doc = *w
+
+	// 更新缓存
+	wfsupTrueKey := fmt.Sprintf("wfsup:get:%+v:%d:%d:%d", true, w.ID, w.StateID, w.UserID)
+	if _, err1 := cache.LRU().Get(wfsupTrueKey); err1 == nil {
+
+		info := &WorkflowsState{
+			ID: doc.StateID,
+		}
+		if wt, err2 := info.Get(false, 2); err2 == nil {
+			doc.WorkflowsState = wt
+		}
+		f := &SysUser{}
+		f.UserId = doc.UserID
+		if wt, err3 := f.Get(); err3 == nil {
+			doc.SysUser = wt.SysUserB
+		}
+		cache.LRU().Set(wfsupTrueKey, doc)
+	}
+	wfsupFalseKey := fmt.Sprintf("wfsup:get:%+v:%d:%d:%d", false, w.ID, w.StateID, w.UserID)
+	if _, err4 := cache.LRU().Get(wfsupTrueKey); err4 == nil {
+		cache.LRU().Set(wfsupFalseKey, doc)
+	}
+
+	wfsupgetpkeyTrue := fmt.Sprintf("wfsup:getp:%d:%d:%+v:%d:%d", 20, 1, true, w.StateID, w.UserID)
+	if result, err5 := cache.LRU().Get(wfsupgetpkeyTrue); err5 == nil {
+		if resultA, ok := result.([]WorkflowsStateUserParticipant); ok {
+			resultA = append(resultA, doc)
+			cache.LRU().Set(wfsupgetpkeyTrue, resultA)
+		}
+	}
+
+	wfsupgetpkeyFalse := fmt.Sprintf("wfsup:getp:%d:%d:%+v:%d:%d", 20, 1, false, w.StateID, w.UserID)
+	if result, err6 := cache.LRU().Get(wfsupgetpkeyFalse); err6 == nil {
+		if resultA, ok := result.([]WorkflowsStateUserParticipant); ok {
+			resultA = append(resultA, doc)
+			cache.LRU().Set(wfsupgetpkeyFalse, resultA)
+		}
+	}
+
 	return doc, nil
 }
 

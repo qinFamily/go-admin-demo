@@ -52,6 +52,15 @@ func UpdateWorkFlow(c *gin.Context) {
 	app.OK(c, nil, msg.NotFound)
 }
 
+func InsertWorkFlow(c *gin.Context) {
+	var data models.WorkflowsWorkflow
+	err := c.ShouldBindJSON(&data)
+	tools.HasError(err, "", 500)
+	result, err := data.Create()
+	tools.HasError(err, "", -1)
+	app.OK(c, result, "")
+}
+
 func DeleteWorkflowsWorkflow(c *gin.Context) {
 	var data models.WorkflowsWorkflow
 	IDS := tools.IdsStrToIdsIntGroup("flowId", c)

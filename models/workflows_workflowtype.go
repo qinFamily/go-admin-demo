@@ -32,9 +32,30 @@ func (WorkflowsWorkflowtype) TableName() string {
 
 func (w *WorkflowsWorkflowtype) Create() (wt WorkflowsWorkflowtype, err error) {
 
-	result := orm.Eloquent.Table(w.TableName()).Create(&wt)
+	result := orm.Eloquent.Table(w.TableName()).Create(&w)
 	if result.Error != nil {
 		err = result.Error
+	}
+	wt = *w
+	// 更新缓存【笑哭】
+	wfwtKey := fmt.Sprintf("wfwt:get:%d", w.ID)
+	if _, err1 := cache.LRU().Get(wfwtKey); err1 == nil {
+		cache.LRU().Set(wfwtKey, wt)
+	}
+	wfwtgetpKey := fmt.Sprintf("wfwt:getp:%d:%d", 20, 1)
+	if results, err2 := cache.LRU().Get(wfwtgetpKey); err2 == nil {
+
+		if ars, ok := results.([]WorkflowtypeWorkflowsSet); ok {
+			wf := &WorkflowsWorkflow{
+				TypeID: wt.ID,
+			}
+			res, _, err := wf.GetPage(200, 1, false)
+			if err == nil {
+				ars = append(ars, WorkflowtypeWorkflowsSet{&wt, res})
+				cache.LRU().Set(wfwtgetpKey, ars)
+			}
+		}
+
 	}
 	return
 }

@@ -16,7 +16,9 @@ var saveLock sync.Mutex
 
 // Procdef 流程定义表
 type Procdef struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	NodeId string `json:"nodeId"`
 	// 流程定义json字符串
 	Resource *flow.Node `json:"resource"`
 	// 用户id

@@ -30,12 +30,58 @@ func (WorkflowsWorkflow) TableName() string {
 }
 func (w *WorkflowsWorkflow) Create() (WorkflowsWorkflow, error) {
 	var doc WorkflowsWorkflow
+	if w.TypeID == 0 {
+		if f, ok := w.WorkflowsWorkflowtype.(float64); ok {
+			w.TypeID = int(f)
+		}
+	}
 	result := orm.Eloquent.Table(w.TableName()).Create(&w)
 	if result.Error != nil {
 		err := result.Error
 		return doc, err
 	}
 	doc = *w
+	// 更新缓存
+	wfwKeyTrue := fmt.Sprintf("wfw:get:%+v:%d", true, doc.ID)
+	if _, err1 := cache.LRU().Get(wfwKeyTrue); err1 == nil {
+
+		info := &WorkflowsWorkflowtype{
+			ID: doc.TypeID,
+		}
+		if wt, err := info.Get(); err == nil {
+			doc.WorkflowsWorkflowtype = wt
+		}
+
+		cache.LRU().Set(wfwKeyTrue, doc)
+	}
+	wfwKeyFalse := fmt.Sprintf("wfw:get:%+v:%d", false, doc.ID)
+	if _, err1 := cache.LRU().Get(wfwKeyFalse); err1 == nil {
+		cache.LRU().Set(wfwKeyFalse, doc)
+	}
+
+	wfwgetpKeyTrue := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, 1, true, doc.TypeID)
+	if result, err1 := cache.LRU().Get(wfwgetpKeyTrue); err1 == nil {
+		if resultA, ok := result.([]WorkflowsWorkflow); ok {
+			info := &WorkflowsWorkflowtype{
+				ID: doc.TypeID,
+			}
+			if wt, err := info.Get(); err == nil {
+				doc.WorkflowsWorkflowtype = wt
+			}
+			resultA = append(resultA, doc)
+			cache.LRU().Set(wfwgetpKeyTrue, resultA)
+		}
+
+	}
+
+	wfwgetpKeyFalse := fmt.Sprintf("wfw:getp:%d:%d:%+v:%d", 20, 1, false, doc.TypeID)
+	if result, err1 := cache.LRU().Get(wfwgetpKeyFalse); err1 == nil {
+		if resultA, ok := result.([]WorkflowsWorkflow); ok {
+			resultA = append(resultA, doc)
+			cache.LRU().Set(wfwgetpKeyFalse, resultA)
+		}
+	}
+
 	return doc, nil
 }
 
