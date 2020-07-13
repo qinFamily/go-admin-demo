@@ -90,11 +90,11 @@ func FindProcdefsWithCountAndPaged(pageIndex, pageSize int, maps map[string]inte
 		db = database.Eloquent
 	}
 
-	err = db.Select("id,name,version,userid,deploy_time").Where(maps).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&datas).Error
+	err = db.Table("procdef").Select("id,name,version,userid,deploy_time").Where(maps).Offset((pageIndex - 1) * pageSize).Limit(pageSize).Find(&datas).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0, err
 	}
-	err = db.Model(&Procdef{}).Where(maps).Count(&count).Error
+	err = db.Table("procdef").Model(&Procdef{}).Where(maps).Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}

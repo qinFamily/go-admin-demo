@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"go-admin-demo/tools"
+	"go-admin-demo/tools/app"
 	"go-admin-demo/workflow-engine/service"
 
 	"github.com/gin-gonic/gin"
@@ -74,8 +75,10 @@ func SaveProcdef(c *gin.Context) {
 // 分页查询
 func FindAllProcdefPage(c *gin.Context) {
 	var procdef = service.Procdef{PageIndex: 1, PageSize: 10}
-	err := c.ShouldBindJSON(&procdef)
-	tools.HasError(err, "", 500)
+	// err := c.ShouldBindJSON(&procdef)
+	// log.Println(" ============== ShouldBindJSON, err ============== ", err)
+	// tools.HasError(err, "", 500)
+	var err error
 
 	var pageSize = 10
 	var pageIndex = 1
@@ -88,12 +91,20 @@ func FindAllProcdefPage(c *gin.Context) {
 	procdef.PageIndex = pageIndex
 	procdef.PageSize = pageSize
 
-	datas, err := procdef.FindAllPageAsJSON()
+	datas, count, err := procdef.FindAll()
+	// log.Println(" ============== procdef.FindAll, datas, err ============== ", datas, err)
 	if err != nil {
-		util.ResponseErr(c.Writer, err)
+		app.Error(c, 500, err, "")
 		return
 	}
-	fmt.Fprintf(c.Writer, "%s", datas)
+	page := app.Page{
+		List:      datas,
+		PageSize:  count,
+		PageIndex: 1,
+		Count:     count,
+	}
+
+	app.OK(c, page, "OK")
 }
 
 // DelProcdefByID del by id
@@ -116,4 +127,23 @@ func DelProcdefByID(c *gin.Context) {
 		return
 	}
 	util.ResponseOk(c.Writer)
+}
+
+// FindProcdefByDefID find by page
+func FindProcdefByDefID(c *gin.Context) {
+	workFlowDefID := c.Request.FormValue("workFlowDefId")
+	if len(workFlowDefID) == 0 {
+		FindAllProcdefPage(c)
+		return
+	}
+	var err error
+	id := tools.StrToInt(err, workFlowDefID)
+	datas, err := service.GetProcdefByID(id)
+	// log.Println(" ============== procdef.FindAll, datas, err ============== ", datas, err)
+	if err != nil {
+		app.Error(c, 500, err, "")
+		return
+	}
+
+	app.OK(c, datas, "OK")
 }

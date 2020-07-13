@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	mycasbin "go-admin-demo/pkg/casbin"
 	"go-admin-demo/pkg/jwtauth"
 	_ "go-admin-demo/pkg/jwtauth"
 	"go-admin-demo/tools"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 //权限检查中间件
@@ -19,7 +20,7 @@ func AuthCheckRole() gin.HandlerFunc {
 		tools.HasError(err, "", 500)
 		//检查权限
 		res, err := e.Enforce(v["rolekey"], c.Request.URL.Path, c.Request.Method)
-		log.Println("----------------", v["rolekey"], c.Request.URL.Path, c.Request.Method)
+		log.Println("----------------", v["rolekey"], c.Request.URL.Path, c.Request.Method, "error", err)
 
 		tools.HasError(err, "", 500)
 

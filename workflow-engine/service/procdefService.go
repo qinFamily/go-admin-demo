@@ -160,8 +160,10 @@ func ExistsProcdefByNameAndCompany(name, company string) (yes bool, version int,
 func (p *Procdef) FindAllPageAsJSON() (string, error) {
 	datas, count, err := p.FindAll()
 	if err != nil {
+		// log.Println(" ============== FindAllPageAsJSON error ============== ", err)
 		return "", err
 	}
+	// log.Println(" ============== FindAllPageAsJSON datas, count, err ============== ", datas, count, err)
 	return util.ToPageJSON(datas, count, p.PageIndex, p.PageSize)
 }
 

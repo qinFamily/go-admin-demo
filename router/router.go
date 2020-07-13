@@ -200,6 +200,7 @@ func InitRouter() *gin.Engine {
 		// 钉钉样式的工作流
 
 		auth.GET("/workflow/", controller.Index)
+		auth.GET("/workflow/procdef", controller.GetInitData)
 		//-------------------------流程定义----------------------
 		auth.POST("/workflow/procdef/save", controller.SaveProcdef)
 		auth.POST("/workflow/procdef/saveByToken", controller.SaveProcdefByToken)
