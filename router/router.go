@@ -2,6 +2,8 @@ package router
 
 import (
 	"go-admin-demo/apis"
+	"go-admin-demo/apis/grid/base"
+	"go-admin-demo/apis/grid/base/housing"
 	log2 "go-admin-demo/apis/log"
 	"go-admin-demo/apis/monitor"
 	"go-admin-demo/apis/system"
@@ -166,6 +168,26 @@ func InitRouter() *gin.Engine {
 		auth.PUT("/article", apis.UpdateArticle)
 		auth.DELETE("/article/:articleId", apis.DeleteArticle)
 
+		// 网格信息
+		auth.GET("/grid/base/housingList", housing.GetGridBasicHousingList)
+		auth.GET("/grid/base/housing/:housId", housing.GetGridBasicHousing)
+		auth.POST("/grid/base/housing", housing.InsertGridBasicHousing)
+		auth.PUT("/grid/base/housing", housing.UpdateGridBasicHousing)
+		auth.DELETE("/grid/base/housing/:housId", housing.DeleteGridBasicHousing)
+
+		auth.GET("/grid/base/buildingList", housing.GetGridBasicBuidingList)
+		auth.GET("/grid/base/building/:buildingId", housing.GetGridBasicBuiding)
+		auth.POST("/grid/base/building", housing.InsertGridBasicBuiding)
+		auth.PUT("/grid/base/building", housing.UpdateGridBasicBuiding)
+		auth.DELETE("/grid/base/building/:buildingId", housing.DeleteGridBasicBuiding)
+
+		auth.GET("/grid/basic/peopleList", base.GetGridBasicPeopleList)
+		auth.GET("/grid/basic/people/:peopleId", base.GetGridBasicPeople)
+		auth.POST("/grid/basic/people", base.InsertGridBasicPeople)
+		auth.PUT("/grid/basic/people", base.UpdateGridBasicPeople)
+		auth.DELETE("/grid/basic/people/:peopleId", base.DeleteGridBasicPeople)
+
+		// 工作流
 		auth.GET("/sys/auth/getmenubutons", system.GetMenubButons)
 		auth.GET("/workflow/workflowtype/", workflow.GetWorkFlowType)
 		auth.POST("/workflow/workflowtype/", workflow.InsertWorkFlowType)
