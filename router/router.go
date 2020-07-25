@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-admin-demo/apis"
+	"go-admin-demo/apis/grid"
 	"go-admin-demo/apis/grid/base"
 	"go-admin-demo/apis/grid/base/housing"
 	log2 "go-admin-demo/apis/log"
@@ -186,6 +187,12 @@ func InitRouter() *gin.Engine {
 		auth.POST("/grid/basic/people", base.InsertGridBasicPeople)
 		auth.PUT("/grid/basic/people", base.UpdateGridBasicPeople)
 		auth.DELETE("/grid/basic/people/:peopleId", base.DeleteGridBasicPeople)
+
+		auth.GET("/grid/gridList", grid.GetGridList)
+		auth.GET("/grid/grid/:gridId", grid.GetGrid)
+		auth.POST("/grid/grid", grid.InsertGrid)
+		auth.PUT("/grid/grid", grid.UpdateGrid)
+		auth.DELETE("/grid/grid/:gridId", grid.DeleteGrid)
 
 		// 工作流
 		auth.GET("/sys/auth/getmenubutons", system.GetMenubButons)

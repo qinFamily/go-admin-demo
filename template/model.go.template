@@ -9,7 +9,7 @@ _ "time"
 type {{.ClassName}} struct {
 {{ range .Columns -}}
     {{$x := .Pk}}
-    {{if ($x)}}{{.GoField}} {{.GoType}} `json:"{{.JsonField}}" gorm:"type:{{.ColumnType}};primary_key"`{{else}}{{.GoField}} {{.GoType}} `json:"{{.JsonField}}" gorm:"type:{{.ColumnType}};"`{{end}} // {{.ColumnComment}}
+    {{if ($x)}}{{.GoField}} {{.GoType}} `json:"{{.JsonField}}" gorm:"column:{{.ColumnName}};type:{{.ColumnType}};primary_key"`{{else}}{{.GoField}} {{.GoType}} `json:"{{.JsonField}}" gorm:"column:{{.ColumnName}};type:{{.ColumnType}};"`{{end}} // {{.ColumnComment}}
 {{- end }}
 DataScope   string `json:"dataScope" gorm:"-"`
 Params      string `json:"params"  gorm:"-"`
