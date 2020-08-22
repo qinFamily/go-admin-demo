@@ -1,3 +1,14 @@
+/*
+ * @Author: xiaoxu@mgtv.com
+ * @Date: 2020-05-24 17:32:46
+ * @Jira:
+ * @Wiki:
+ * @LastEditTime: 2020-08-22 19:50:11
+ * @LastEditors: xiaoxu
+ * @Description:
+ * @FilePath: \go-admin-ui-vuef:\project\work\go\src\go-admin-demo\middleware\permission.go
+ * @可以输入预定的版权声明、个性签名、空行等
+ */
 package middleware
 
 import (
@@ -5,7 +16,6 @@ import (
 	"go-admin-demo/pkg/jwtauth"
 	_ "go-admin-demo/pkg/jwtauth"
 	"go-admin-demo/tools"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +30,7 @@ func AuthCheckRole() gin.HandlerFunc {
 		tools.HasError(err, "", 500)
 		//检查权限
 		res, err := e.Enforce(v["rolekey"], c.Request.URL.Path, c.Request.Method)
-		log.Println("----------------", v["rolekey"], c.Request.URL.Path, c.Request.Method, "error", err)
+		// log.Println("----------------", v["rolekey"], c.Request.URL.Path, c.Request.Method, "error", err)
 
 		tools.HasError(err, "", 500)
 

@@ -3,6 +3,8 @@ package models
 import (
 	orm "go-admin-demo/database"
 	"go-admin-demo/tools"
+
+	// "log"
 	_ "time"
 )
 
@@ -56,15 +58,14 @@ func (e *GridBasicPeople) Create() (GridBasicPeople, error) {
 }
 
 // 获取GridBasicPeople
-func (e *GridBasicPeople) Get() (GridBasicPeople, error) {
-	var doc GridBasicPeople
+func (e *GridBasicPeople) Get() (doc GridBasicPeople, err error) {
 
-	table := orm.Eloquent.Table(e.TableName())
-
-	if err := table.First(&doc).Error; err != nil {
-		return doc, err
+	table := orm.Eloquent.Table(e.TableName()).Where("peopleId = ?", e.PeopleId)
+	// log.Println("=============================", e.PeopleId)
+	if err = table.First(&doc).Error; err != nil {
+		return
 	}
-	return doc, nil
+	return
 }
 
 // 获取GridBasicPeople带分页
@@ -103,7 +104,7 @@ func (e *GridBasicPeople) Update(id int) (update GridBasicPeople, err error) {
 
 // 删除GridBasicPeople
 func (e *GridBasicPeople) Delete(id int) (success bool, err error) {
-	if err = orm.Eloquent.Table(e.TableName()).Where("peopleId = ?", id).Delete(&GridBasicPeople{}).Error; err != nil {
+	if err = orm.Eloquent.Table(e.TableName()).Where("peopleId = ?", id).Delete(e).Error; err != nil {
 		success = false
 		return
 	}
@@ -113,7 +114,7 @@ func (e *GridBasicPeople) Delete(id int) (success bool, err error) {
 
 //批量删除
 func (e *GridBasicPeople) BatchDelete(id []int) (Result bool, err error) {
-	if err = orm.Eloquent.Table(e.TableName()).Where("peopleId in (?)", id).Delete(&GridBasicPeople{}).Error; err != nil {
+	if err = orm.Eloquent.Table(e.TableName()).Where("peopleId in (?)", id).Delete(e).Error; err != nil {
 		return
 	}
 	Result = true
