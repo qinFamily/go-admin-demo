@@ -1,14 +1,27 @@
+/*
+ * @Author: xiaoxu@mgtv.com
+ * @Date: 2020-05-24 17:32:46
+ * @Jira:
+ * @Wiki:
+ * @LastEditTime: 2020-08-23 00:08:05
+ * @LastEditors: xiaoxu
+ * @Description:
+ * @FilePath: \go-admin-ui-vuef:\project\work\go\src\go-admin-demo\tools\logger.go
+ * @可以输入预定的版权声明、个性签名、空行等
+ */
 package tools
 
 import (
 	"errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 func InitLogger() {
+	// logger.Println("--------------------------- settings.application.mode ", viper.GetString("settings.application.mode"))
 	switch Mode(viper.GetString("settings.application.mode")) {
 	case ModeDev, ModeTest:
 		log.SetOutput(os.Stdout)
@@ -25,8 +38,11 @@ func InitLogger() {
 			log.Fatal(err)
 		}
 		fileWriter := logFileWriter{file, info.Size()}
+		log.SetFormatter(&log.JSONFormatter{})
 		log.SetOutput(&fileWriter)
-		log.SetLevel(log.ErrorLevel)
+		// log.SetLevel(log.ErrorLevel)
+		log.SetLevel(log.InfoLevel)
+		log.Info("InitLogger")
 	}
 
 	log.SetReportCaller(true)

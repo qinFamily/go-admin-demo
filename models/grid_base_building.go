@@ -7,20 +7,21 @@ import (
 )
 
 type GridBasicBuiding struct {
-	BuildingId  int    `json:"buildingId" gorm:"column:buildingId;type:bigint(20);primary_key"` // 建筑ID
-	GridId      int    `json:"gridId" gorm:"column:gridId;type:bigint(20);"`                    // 网格ID
-	SecretaryId int    `json:"secretaryId" gorm:"column:secretaryId;type:bigint(20);"`          // 楼栋长ID
-	Sits        string `json:"sits" gorm:"column:sits;type:tinytext;"`                          // 坐落地
-	Structure   int    `json:"structure" gorm:"column:structure;type:tinyint(4);"`              // 建筑结构 0-未知 1-钢混 2-木 3-砖 4-钢架构
-	Layers      int    `json:"layers" gorm:"column:layers;type:tinyint(4);"`                    // 建筑层数
-	Years       string `json:"years" gorm:"column:years;type:date;"`                            // 建筑年代
-	RiskLevel   int    `json:"riskLevel" gorm:"column:riskLevel;type:tinyint(4);"`              // 建筑危险等级 0-未知 1-正常 2-轻度 3-中度 4-重度 5-危房 6-拆除
-	Developers  string `json:"developers" gorm:"column:developers;type:varchar(50);"`           // 开发商
-	Remarks     string `json:"remarks" gorm:"column:remarks;type:tinytext;"`                    // 备注
-	CreateBy    string `json:"createBy" gorm:"type:varchar(2);"`                                // 创建人
-	UpdateBy    string `json:"updateBy" gorm:"type:varchar(2);"`                                // 更新人
-	DataScope   string `json:"dataScope" gorm:"-"`
-	Params      string `json:"params"  gorm:"-"`
+	BuildingId   int    `json:"buildingId" gorm:"column:buildingId;type:bigint(20);primary_key"`     // 建筑ID
+	BuildingName string `json:"buildingName" gorm:"column:buildingName;type:bigint(20);primary_key"` // 建筑名称
+	GridId       int    `json:"gridId" gorm:"column:gridId;type:bigint(20);"`                        // 网格ID
+	SecretaryId  int    `json:"secretaryId" gorm:"column:secretaryId;type:bigint(20);"`              // 楼栋长ID
+	Sits         string `json:"sits" gorm:"column:sits;type:tinytext;"`                              // 坐落地
+	Structure    int    `json:"structure" gorm:"column:structure;type:tinyint(4);"`                  // 建筑结构 0-未知 1-钢混 2-木 3-砖 4-钢架构
+	Layers       int    `json:"layers" gorm:"column:layers;type:tinyint(4);"`                        // 建筑层数
+	Years        string `json:"years" gorm:"column:years;type:date;"`                                // 建筑年代
+	RiskLevel    int    `json:"riskLevel" gorm:"column:riskLevel;type:tinyint(4);"`                  // 建筑危险等级 0-未知 1-正常 2-轻度 3-中度 4-重度 5-危房 6-拆除
+	Developers   string `json:"developers" gorm:"column:developers;type:varchar(50);"`               // 开发商
+	Remarks      string `json:"remarks" gorm:"column:remarks;type:tinytext;"`                        // 备注
+	CreateBy     string `json:"createBy" gorm:"type:varchar(2);"`                                    // 创建人
+	UpdateBy     string `json:"updateBy" gorm:"type:varchar(2);"`                                    // 更新人
+	DataScope    string `json:"dataScope" gorm:"-"`
+	Params       string `json:"params"  gorm:"-"`
 	BaseModel
 	GridName  string `json:"gridName"  gorm:"-"`  // 网格名称 - 前端展示需要
 	Secretary string `json:"secretary"  gorm:"-"` // 楼栋长姓名 - 前端展示需要

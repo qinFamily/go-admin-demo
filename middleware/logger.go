@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"go-admin-demo/models"
 	"go-admin-demo/tools"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 //实例化
@@ -18,13 +19,14 @@ func LoggerToFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 开始时间
 		startTime := time.Now()
-
+		// log.Println(" ======================== startTime", startTime)
 		// 处理请求
 		c.Next()
 
 		// 结束时间
 		endTime := time.Now()
 
+		// log.Println(" ======================== endTime", endTime)
 		// 执行时间
 		latencyTime := endTime.Sub(startTime)
 
@@ -40,6 +42,7 @@ func LoggerToFile() gin.HandlerFunc {
 		// 请求IP
 		clientIP := c.ClientIP()
 
+		// log.Println(" ======================== logger.Infof", clientIP)
 		// 日志格式
 		logger.Infof("%s [%s] %3d %13v %15s %s %s \r\n",
 			startTime.Format("2006-01-02 15:04:05.9999"),

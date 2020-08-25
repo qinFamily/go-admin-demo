@@ -53,8 +53,10 @@ func setup() {
 
 	//1. 读取配置
 	config2.ConfigSetup(config)
+	// log.Println("tools.InitLogger")
 	//2. 设置日志
 	tools.InitLogger()
+	// log.Println("tools.InitLogger Done")
 	//3. 初始化数据库链接
 	database.Setup()
 	//4. 设置gin mode
@@ -64,7 +66,9 @@ func setup() {
 }
 
 func run() error {
+	// log.Println("router.InitRouter")
 	r := router.InitRouter()
+	// log.Println("router.InitRouter Done")
 
 	defer database.Eloquent.Close()
 

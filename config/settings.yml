@@ -9,6 +9,8 @@ settings:
     writertimeout: 2
   log:
     dir: temp/logs
+  logger:
+    dir: temp/loggers
   jwt:
     secret: go-admin
     timeout: 3600
@@ -29,3 +31,7 @@ settings:
     Expire: 5m
     RedisPassword:
     RedisDatabase: 1
+
+    
+logger:
+  dir: /data/logs
