@@ -34,4 +34,4 @@ settings:
 
     
 logger:
-  dir: /data/logs
+  dir: /data/logs/goadmin
