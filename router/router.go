@@ -171,10 +171,10 @@ func InitRouter() *gin.Engine {
 
 		// 网格信息
 		auth.GET("/grid/base/housingList", housing.GetGridBasicHousingList)
-		auth.GET("/grid/base/housing/:housId", housing.GetGridBasicHousing)
+		auth.GET("/grid/base/housing/:houseId", housing.GetGridBasicHousing)
 		auth.POST("/grid/base/housing", housing.InsertGridBasicHousing)
 		auth.PUT("/grid/base/housing", housing.UpdateGridBasicHousing)
-		auth.DELETE("/grid/base/housing/:housId", housing.DeleteGridBasicHousing)
+		auth.DELETE("/grid/base/housing/:houseId", housing.DeleteGridBasicHousing)
 
 		auth.GET("/grid/base/buildingList", housing.GetGridBasicBuidingList)
 		auth.GET("/grid/base/building/:buildingId", housing.GetGridBasicBuiding)

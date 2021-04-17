@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"go-admin-demo/tools"
 	"go-admin-demo/tools/config"
 	"log"
 	"strings"
@@ -107,19 +108,19 @@ func (c *redisCache) Get(ctx context.Context, key string) ([]byte, error) {
 	if err != nil {
 		if err != redis.Nil {
 			// metrics\.RedisCounter.WithLabelValues("fail").Inc()
-			log.Println("redisCache Get")
+			tools.Logger.Error("redisCache Get")
 			// metrics\.SystemError.WithLabelValues(metrics.RedisGetError).Inc()
 		} else {
 			// metrics\.RedisCounter.WithLabelValues("miss").Inc()
-			log.Println("redisCache Get")
+			tools.Logger.Warn("redisCache Get")
 		}
 	} else {
 		// metrics\.RedisCounter.WithLabelValues("hit").Inc()
 		// 大于0.2秒 记录错误日志
 		if elasped >= time.Millisecond*200 {
-			log.Println("redisCache Get spend too long")
+			tools.Logger.Warn("redisCache Get spend too long")
 		} else {
-			log.Println("redisCache Get")
+			tools.Logger.Info("redisCache Get")
 		}
 	}
 

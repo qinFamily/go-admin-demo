@@ -3,7 +3,7 @@
  * @Date: 2020-05-24 17:32:46
  * @Jira:
  * @Wiki:
- * @LastEditTime: 2020-08-23 00:08:05
+ * @LastEditTime: 2020-08-29 23:40:50
  * @LastEditors: xiaoxu
  * @Description:
  * @FilePath: \go-admin-ui-vuef:\project\work\go\src\go-admin-demo\tools\logger.go
@@ -20,32 +20,39 @@ import (
 	"github.com/spf13/viper"
 )
 
+var Logger *log.Logger
+
 func InitLogger() {
-	// logger.Println("--------------------------- settings.application.mode ", viper.GetString("settings.application.mode"))
+	Logger = log.New()
+	// Logger.Println("--------------------------- settings.application.mode ", viper.GetString("settings.application.mode"))
 	switch Mode(viper.GetString("settings.application.mode")) {
 	case ModeDev, ModeTest:
-		log.SetOutput(os.Stdout)
-		log.SetLevel(log.TraceLevel)
+		Logger.SetOutput(os.Stdout)
+		Logger.SetLevel(log.TraceLevel)
 	case ModeProd:
+		logdir := viper.GetString("logger.dir")
+		if _, err := os.Stat(logdir); os.IsNotExist(err) {
+			os.MkdirAll(logdir, 0777)
+		}
 		file, err := os.OpenFile(viper.GetString("logger.dir")+"/api-"+time.Now().Format("2006-01-02")+".log", os.O_WRONLY|os.O_APPEND|os.O_CREATE|os.O_SYNC, 0600)
 		if err != nil {
-			log.Fatalln("log init failed")
+			Logger.Fatalln("log init failed", err)
 		}
 
 		var info os.FileInfo
 		info, err = file.Stat()
 		if err != nil {
-			log.Fatal(err)
+			Logger.Fatal(err)
 		}
 		fileWriter := logFileWriter{file, info.Size()}
-		log.SetFormatter(&log.JSONFormatter{})
-		log.SetOutput(&fileWriter)
-		// log.SetLevel(log.ErrorLevel)
-		log.SetLevel(log.InfoLevel)
-		log.Info("InitLogger")
+		Logger.SetFormatter(&log.JSONFormatter{})
+		Logger.SetOutput(&fileWriter)
+		// Logger.SetLevel(log.ErrorLevel)
+		Logger.SetLevel(log.InfoLevel)
+		Logger.Info("InitLogger")
 	}
 
-	log.SetReportCaller(true)
+	Logger.SetReportCaller(true)
 }
 
 type logFileWriter struct {
